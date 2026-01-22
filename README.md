@@ -54,13 +54,15 @@ gpt-oss:120b-cloud
 
 /recover → undo response 
 
-/intro → add a prefix preference
+/intro → add a prefix 
 
-/outro → add a postfix preference
+/outro → add a postfix 
 
-/polarity → 0: explanatory; 1: direct 
+/polarity → 0: explanation; 1: direct answer 
 
-**DISCLAIMER:** All requests sent through USAI reasoning modules. Nothing logged or stored. 
+**DISCLAIMER:** 
+
+All requests sent through USAI reasoning modules. Nothing logged or stored. 
 
 **FAQ:**
 
