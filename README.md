@@ -8,7 +8,7 @@ OPEN TERMINAL
 
 (CMD + SPACE BAR; TYPE TERMINAL AND PRESS ENTER)
 
-<img width="1197" height="242" alt="Screenshot 2026-01-22 at 1 20 23 PM" src="https://github.com/user-attachments/assets/391873f5-a23a-42d1-b96b-fd55341c9f32" />
+<img width="888" height="198" alt="123" src="https://github.com/user-attachments/assets/d0495cde-4662-461d-a06a-d9e2196988c9" />
 
 TYPE 
 
