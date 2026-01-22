@@ -1,73 +1,86 @@
-installation:
+DOWNLOAD AND RUN OLLAMA 
 
-Mac:
-1. open terminal (command + space, type "terminal")
-2. cd to folder: `cd ~/Downloads/research-main`
-3. run: `chmod +x start.command`
-4. run: `./start.command` (opens UI; keep terminal open)
-5. next time: just run `./start.command` from the folder
+<img width="2140" height="908" alt="highlighted-image" src="https://github.com/user-attachments/assets/07ffb6f9-3384-45dd-8414-f45ccc58c02b" />
+
+ON MAC: 
+
+OPEN TERMINAL
+
+(CMD + SPACE BAR; TYPE TERMINAL AND PRESS ENTER)
+
+<img width="1197" height="242" alt="Screenshot 2026-01-22 at 1 20 23 PM" src="https://github.com/user-attachments/assets/391873f5-a23a-42d1-b96b-fd55341c9f32" />
+
+TYPE 
+
+cd ~/Downloads/research-main
+
+PRESS ENTER 
+
+TYPE 
+
+chmod +x start.command
+
+PRESS ENTER
+
+TYPE 
+
+./start.command
+
+PRESS ENTER
 
 PC:
-1. open the folder where you downloaded the repository
+1. open the folder where you downloaded the zip file 
 2. double-click `start.bat` (opens UI; keep window open)
-3. next time: double-click `start.bat` again
+
 
 <img width="888" height="198" alt="Screenshot 2025-12-20 at 12 37 45 AM" src="https://github.com/user-attachments/assets/60863b78-ed82-481a-8efb-7f23ef0fe2ac" />
 
 <img width="1143" height="275" alt="Screenshot 2025-12-20 at 12 36 34 AM" src="https://github.com/user-attachments/assets/2c906318-f689-4c75-9f19-3cf88dc444bd" />
 
-/endpoint → type in the endpoint where Ollama is running on your computer with /api/generate added at the end. for example, if your local host is http://localhost:11434/. in the window, type, http://localhost:11434/api/generate. if you're unsure what to do, search 'help me find my local ollama endpoint'.
+/endpoint → change Ollama endpoint
 
-/model → type in the name of the model you plan to use, exactly as it appears at https://ollama.com/library. select your model from the Ollama window drop down menu. then, type in the Ollama chat to trigger the download. if the model you plan to use is not available in the Ollama drop down, run it from a terminal window. open a new terminal window and run the model's execution line e.g. 'ollama run gpt-oss:20b'. keep the terminal open. Then, navigate to the research window. You are ready to go! Always close the running terminal before changing models.
+Default:
+http://localhost:11434/api/generate
 
-/release → this exports the current conversation to your browser downloads; you can drag and drop these releases into the research window as references from previous conversations, just make sure to give the model some context when you do. sometimes, if a conversation is too long or the material is too dense, it's better to condense your thoughts and formulate a new idea as a starting point
+/model → change Ollama model
 
-/recover → this deletes the last dropped file or the last response from the model, whichever came last, it's just a way to undo what happened last - 0: yes, 1: no
+Default:
+gpt-oss:120b-cloud
 
-/intro → add a prompt prefix. session bound (not persistent), not release bound.
+/release → export JSON
 
-/outro → add a prompt postfix. session bound (not persistent), not release bound.
+/recover → undo response 
 
-/polarity → 0: explanatory; full vocabulary 1: concise. direct answer. yes or no, if applicable.
+/intro → add a prefix preference
 
-**DISCLAIMER:** prompts are sent to a private render server. these are then returned to your local ollama model. the specific structure isn't disclosed. your data is not stored or logged.
-prerequisites: ollama must be downloaded separately. the .command will automatically install python 3.6+ for you on mac
+/outro → add a postfix preference
 
-For help learning Ollama, here is the fastest way.
 
-https://youtu.be/UtSSMs6ObqY?si=SZlghpMhHZPMAvP9
+/polarity → 0: explanatory; 1: direct 
 
-**TIP:** I have found that you  can easily change model names from the Ollama Desktop App
+**DISCLAIMER:** All requests sent through USAI reasoning modules. Nothing logged or stored. 
+
+**FAQ:**
+
+Where can I find the names of the models? 
+
+Check the drop down in the Ollama App
+or go to ollama.com/library
 
 <img width="869" height="748" alt="Screenshot 2025-12-20 at 12 44 26 AM" src="https://github.com/user-attachments/assets/f50c9367-4121-4b98-9103-16d4062e8cb0" />
 
-You will still need to set the name of the model you would like to use with the /model command, but the list is a quick reference for proper model name and spelling validation.
 
-**TYPO:**
+**/ENDPOINT:**
 
-<img width="1133" height="211" alt="Screenshot 2025-12-20 at 12 49 02 AM" src="https://github.com/user-attachments/assets/dd0c2e5e-9415-4fe1-832e-a656758a91fb" />
-
-**/RECOVERY:**
-
-<img width="1131" height="270" alt="Screenshot 2025-12-20 at 12 49 30 AM" src="https://github.com/user-attachments/assets/8439b116-8683-4d02-8574-83940107a382" />
+<img width="662" height="16" alt="Screenshot 2025-12-20 at 12 59 43 AM" src="https://github.com/user-attachments/assets/8fdaae12-dafb-409a-88ed-ad8b6922781c" />
 
 **/MODEL:**
 
 <img width="1131" height="171" alt="Screenshot 2025-12-20 at 12 49 59 AM" src="https://github.com/user-attachments/assets/def30c0b-9f1a-4d32-b564-d0dda9527489" />
 
-**CORRECTION:**
+**/RECOVERY:**
 
-<img width="1135" height="217" alt="Screenshot 2025-12-20 at 12 50 15 AM" src="https://github.com/user-attachments/assets/19402073-d8ad-40d0-8316-309e0e69230b" />
-
-**SOLVED:**
-
-<img width="1129" height="1007" alt="Screenshot 2025-12-20 at 12 50 43 AM" src="https://github.com/user-attachments/assets/112e8189-be25-4485-98db-23a0de717c7c" />
-
-**POLARITY:1**
-
-<img width="1133" height="189" alt="Screenshot 2025-12-20 at 12 54 56 AM" src="https://github.com/user-attachments/assets/1c1b5330-e3cd-4bc9-98b1-236f1d6b0853" />
-
-<img width="1120" height="330" alt="Screenshot 2025-12-20 at 12 55 33 AM" src="https://github.com/user-attachments/assets/41f61497-0264-4be8-aa50-9a81f8aa22b8" />
+<img width="1131" height="270" alt="Screenshot 2025-12-20 at 12 49 30 AM" src="https://github.com/user-attachments/assets/8439b116-8683-4d02-8574-83940107a382" />
 
 **/RELEASE**
 
@@ -79,12 +92,19 @@ You will still need to set the name of the model you would like to use with the 
 
 **DRAG&DROP:**
 
-Drag and drop the release to re:search 
+Drag and drop previously released conversation
 
 <img width="1128" height="165" alt="Screenshot 2025-12-20 at 12 59 43 AM" src="https://github.com/user-attachments/assets/297bc781-92ff-47be-8454-753805d551a0" />
 
-**/ENDPOINT:**
+**COMMON ERROR:** 
 
-<img width="662" height="16" alt="Screenshot 2025-12-20 at 12 59 43 AM" src="https://github.com/user-attachments/assets/8fdaae12-dafb-409a-88ed-ad8b6922781c" />
+**CORRECTION:**
 
-The Ollama default endpoint is already set. If yours happens to be different, you will have to search for it independently. However, any search engine will help you solve the problem of locating it with minor grievances. I hope you enjoy, and best of luck with your re:search! 
+<img width="1135" height="217" alt="Screenshot 2025-12-20 at 12 50 15 AM" src="https://github.com/user-attachments/assets/19402073-d8ad-40d0-8316-309e0e69230b" />
+
+**SOLVED:**
+
+<img width="1129" height="1007" alt="Screenshot 2025-12-20 at 12 50 43 AM" src="https://github.com/user-attachments/assets/112e8189-be25-4485-98db-23a0de717c7c" />
+
+
+
