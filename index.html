@@ -5,20 +5,95 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>nexus</title>
   <style>
-    body {background:#181818;color:#BDCEF1;font-family:'Courier New',monospace;height:100vh;width:100vw;margin:0;padding:0;box-sizing:border-box;display:flex;flex-direction:column;font-size:16px;line-height:24px;overflow:hidden;}
-    #toolbar {flex:0 0 auto;padding:0.5em 1ch;background:#222;border-bottom:1px solid #333;display:flex;gap:1em;align-items:center;}
-    #toolbar button {background:#333;color:#BDCEF1;border:1px solid #555;padding:0.4em 1em;font-family:inherit;font-size:inherit;cursor:pointer;}
-    #toolbar button:hover {background:#444;}
-    #toolbar button:active {background:#555;}
-    #polarity-btn {background:#BDCEF1;color:#181818;font-weight:bold;}
-    #display-container {flex:1 1 auto;display:flex;flex-direction:column;overflow:hidden;}
-    #display {flex:1 1 auto;overflow-y:auto;padding:1em 1ch;white-space:pre-wrap;}
-    #input {flex:0 0 auto;border:none;outline:none;background:transparent;color:inherit;font-family:inherit;font-size:inherit;padding:0 1ch;}
-    #input .input-reverse {background:#BDCEF1;color:#181818;}
-    #measure {position:absolute;visibility:hidden;font-family:'Courier New',monospace;white-space:pre;}
-    .reverse-video {background:#BDCEF1;color:#181818;}
-    .config-value {color:#BDCEF1;background:#222;padding:0 0.5ch;cursor:text;}
-    .message-separator {height:1em;}
+    body {
+      background: #181818;
+      color: #BDCEF1;
+      font-family: 'Courier New', monospace;
+      height: 100vh;
+      width: 100vw;
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      display: flex;
+      flex-direction: column;
+      font-size: 16px;
+      line-height: 24px;
+      overflow: hidden;
+    }
+    #toolbar {
+      flex: 0 0 auto;
+      padding: 0.5em 1ch;
+      background: #222;
+      border-bottom: 1px solid #333;
+      display: flex;
+      gap: 1em;
+      align-items: center;
+    }
+    #toolbar button {
+      background: #333;
+      color: #BDCEF1;
+      border: 1px solid #555;
+      padding: 0.4em 1em;
+      font-family: inherit;
+      font-size: inherit;
+      cursor: pointer;
+    }
+    #toolbar button:hover {
+      background: #444;
+    }
+    #toolbar button:active {
+      background: #555;
+    }
+    #polarity-btn {
+      background: #BDCEF1;
+      color: #181818;
+      font-weight: bold;
+    }
+    #display-container {
+      flex: 1 1 auto;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+    #display {
+      flex: 1 1 auto;
+      overflow-y: auto;
+      padding: 1em 1ch;
+      white-space: pre-wrap;
+    }
+    #input {
+      flex: 0 0 auto;
+      border: none;
+      outline: none;
+      background: transparent;
+      color: inherit;
+      font-family: inherit;
+      font-size: inherit;
+      padding: 0 1ch;
+    }
+    #input .input-reverse {
+      background: #BDCEF1;
+      color: #181818;
+    }
+    #measure {
+      position: absolute;
+      visibility: hidden;
+      font-family: 'Courier New', monospace;
+      white-space: pre;
+    }
+    .reverse-video {
+      background: #BDCEF1;
+      color: #181818;
+    }
+    .config-value {
+      color: #BDCEF1;
+      background: #222;
+      padding: 0 0.5ch;
+      cursor: text;
+    }
+    .message-separator {
+      height: 1em;
+    }
   </style>
 </head>
 <body>
@@ -63,16 +138,16 @@
       release() {
         this.releaseTime = new Date().toLocaleTimeString();
 
-        let text = `${this.date} ${this.day}`;
-        if (this.releaseTime) text += ` ${this.releaseTime}`;
-        text += '\n\n';
+        let text = `${this.date} (${this.day})\n`;
+        if (this.releaseTime) text += `Released: ${this.releaseTime}\n`;
+        text += '\n';
 
         for (const entry of this.log) {
-          const time = new Date(entry.timestamp).toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'});
+          const time = new Date(entry.timestamp).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
           if (entry.type === 'initiation') {
-            text += `USER ${time}:\n${entry.probe.trim()}\n\n`;
+            text += `USER ${time}:\n${entry.probe}\n\n`;
           } else if (entry.type === 'response') {
-            text += `LLM ${time}:\n${entry.probe.trim()}\n\n`;
+            text += `LLM ${time}:\n${entry.probe}\n\n`;
           }
         }
 
@@ -80,7 +155,7 @@
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
-        a.download = 'nexus-export.txt';
+        a.download = `${this.id}.txt`;
         a.click();
         URL.revokeObjectURL(url);
       }
@@ -112,7 +187,9 @@
       setupEvents() {
         window.addEventListener('resize', () => this.updateDimensions());
 
-        this.input.addEventListener('input', () => this.normalizeInput());
+        this.input.addEventListener('input', () => {
+          this.normalizeInput();
+        });
 
         document.addEventListener('keydown', async (e) => {
           if (e.key === 'Enter' && e.shiftKey) {
@@ -160,11 +237,15 @@
             }
           } else if (['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'].includes(e.key)) {
             return;
+          } else {
+            return;
           }
         });
 
         document.getElementById('export-btn').addEventListener('click', () => {
-          if (this.currentStructure) this.currentStructure.release();
+          if (this.currentStructure) {
+            this.currentStructure.release();
+          }
         });
 
         document.getElementById('back-btn').addEventListener('click', () => {
@@ -189,9 +270,13 @@
           if (e.target.classList.contains('config-value')) {
             const id = e.target.id;
             const value = e.target.textContent.trim();
-            if (id === 'edit-endpoint') this.modelEndpoint = value;
-            if (id === 'edit-model') this.model = value;
-            if (id === 'edit-key') this.apiKey = value;
+            if (id === 'edit-endpoint') {
+              this.modelEndpoint = value;
+            } else if (id === 'edit-model') {
+              this.model = value;
+            } else if (id === 'edit-key') {
+              this.apiKey = value;
+            }
           }
         }, true);
 
@@ -199,9 +284,13 @@
           if (e.target.classList.contains('config-value')) {
             const id = e.target.id;
             const value = e.target.textContent.trim();
-            if (id === 'edit-endpoint') this.modelEndpoint = value;
-            if (id === 'edit-model') this.model = value;
-            if (id === 'edit-key') this.apiKey = value;
+            if (id === 'edit-endpoint') {
+              this.modelEndpoint = value;
+            } else if (id === 'edit-model') {
+              this.model = value;
+            } else if (id === 'edit-key') {
+              this.apiKey = value;
+            }
           }
         });
       }
@@ -209,6 +298,7 @@
       normalizeInput() {
         const selection = window.getSelection();
         let cursorOffset = 0;
+
         if (selection.rangeCount > 0) {
           const range = selection.getRangeAt(0);
           const preCaretRange = range.cloneRange();
@@ -218,18 +308,28 @@
         }
 
         const textContent = this.input.textContent;
+
         this.input.innerHTML = '';
         if (textContent) {
           const span = document.createElement('span');
           span.className = 'input-reverse';
           span.textContent = textContent;
           this.input.appendChild(span);
-          const range = document.createRange();
-          const textNode = span.firstChild;
-          if (textNode) {
-            const offset = Math.min(cursorOffset, textNode.length);
-            range.setStart(textNode, offset);
-            range.collapse(true);
+
+          try {
+            const range = document.createRange();
+            const textNode = span.firstChild;
+            if (textNode) {
+              const offset = Math.min(cursorOffset, textNode.length);
+              range.setStart(textNode, offset);
+              range.collapse(true);
+              selection.removeAllRanges();
+              selection.addRange(range);
+            }
+          } catch (e) {
+            const range = document.createRange();
+            range.selectNodeContents(this.input);
+            range.collapse(false);
             selection.removeAllRanges();
             selection.addRange(range);
           }
@@ -245,6 +345,23 @@
         const newLineHeight = window.innerHeight / 24;
         document.body.style.fontSize = `${newFontSize}px`;
         document.body.style.lineHeight = `${newLineHeight}px`;
+      }
+
+      startWait() {
+        this.dotCount = 0;
+        if (this.dotInterval) clearInterval(this.dotInterval);
+        this.dotInterval = setInterval(() => {
+          this.dotCount = (this.dotCount + 1) % 4;
+          this.render();
+        }, 1000);
+      }
+
+      stopWait() {
+        if (this.dotInterval) {
+          clearInterval(this.dotInterval);
+          this.dotInterval = null;
+        }
+        this.dotCount = 0;
       }
 
       scrollToBottom() {
@@ -277,13 +394,19 @@
         if (this.structures.length > 0) {
           for (const structure of this.structures) {
             for (const entry of structure.log) {
-              if (entry.type === 'initiation') fullProbe += `user:\n${entry.probe}\n`;
-              else if (entry.type === 'response') fullProbe += `llm:\n${entry.probe}\n`;
+              if (entry.type === 'initiation') {
+                fullProbe += `user:\n${entry.probe}\n`;
+              } else if (entry.type === 'response') {
+                fullProbe += `llm:\n${entry.probe}\n`;
+              }
             }
           }
         }
         
-        if (this.stack.length > 0) fullProbe += this.stack.join('');
+        if (this.stack.length > 0) {
+          fullProbe += this.stack.join('');
+        }
+        
         fullProbe += probe;
         
         try {
@@ -308,6 +431,9 @@
           let fullResponse = '';
           let liveResponse = '';
 
+          this.stack.push('llm:\n');
+          this.render();
+
           while (true) {
             const { done, value } = await reader.read();
             if (done) break;
@@ -316,16 +442,12 @@
             liveResponse += chunk;
             fullResponse += chunk;
 
-            if (this.stack.length > 0 && this.stack[this.stack.length - 1].startsWith('llm:\n')) {
-              this.stack[this.stack.length - 1] = `llm:\n${liveResponse}`;
-            } else {
-              this.stack.push(`llm:\n${liveResponse}`);
-            }
-
+            this.stack[this.stack.length - 1] = `llm:\n${liveResponse}`;
             this.render();
           }
 
           this.currentStructure.addResponse(fullResponse);
+          this.stack[this.stack.length - 1] = `llm:\n${fullResponse}`;
 
           return fullResponse;
         } catch (e) {
@@ -338,16 +460,22 @@
         const modelEl = document.getElementById('edit-model');
         const keyEl = document.getElementById('edit-key');
         
-        if (endpointEl) this.modelEndpoint = endpointEl.textContent.trim() || 'https://api.x.ai';
-        if (modelEl) this.model = modelEl.textContent.trim() || 'grok-3';
-        if (keyEl) this.apiKey = keyEl.textContent.trim();
+        if (endpointEl && endpointEl.textContent.trim() !== 'NULL') {
+          this.modelEndpoint = endpointEl.textContent.trim();
+        }
+        if (modelEl && modelEl.textContent.trim() !== 'NULL') {
+          this.model = modelEl.textContent.trim();
+        }
+        if (keyEl && keyEl.textContent.trim() !== 'NULL') {
+          this.apiKey = keyEl.textContent.trim();
+        }
 
         let output = '';
         const structures = this.formatStructures();
         let blockInput = false;
 
-        output += 'endpoint: <span id="edit-endpoint" class="config-value" contenteditable="true">' + this.modelEndpoint + '</span>\n';
-        output += 'model: <span id="edit-model" class="config-value" contenteditable="true">' + this.model + '</span>\n';
+        output += 'endpoint: <span id="edit-endpoint" class="config-value" contenteditable="true">' + (this.modelEndpoint || 'https://api.x.ai') + '</span>\n';
+        output += 'model: <span id="edit-model" class="config-value" contenteditable="true">' + (this.model || 'grok-3') + '</span>\n';
         output += 'key: <span id="edit-key" class="config-value" contenteditable="true">' + (this.apiKey || 'NULL') + '</span>\n';
 
         switch(this.state) {
@@ -376,13 +504,13 @@
             if (this.stack.length > 0) output += this.formatStack();
             break;
           case State.CALIBRATE_ENDPOINT_RECOVER:
-            output += '/route\n<span class="reverse-video">endpoint: ' + this.modelEndpoint + '</span>';
+            output += '/route\n<span class="reverse-video">endpoint: ' + (this.modelEndpoint || 'https://api.x.ai') + '</span>';
             break;
           case State.CALIBRATE_MODEL_RECOVER:
-            output += '/route\n<span class="reverse-video">model: ' + this.model + '</span>';
+            output += '/route\n<span class="reverse-video">model: ' + (this.model || 'grok-3') + '</span>';
             break;
           case State.CALIBRATE_KEY_RECOVER:
-            output += '/route\n<span class="reverse-video">key: ' + this.apiKey + '</span>';
+            output += '/route\n<span class="reverse-video">key: ' + (this.apiKey || 'NULL') + '</span>';
             break;
           case State.CALIBRATE_WAIT:
             output += 'processing...';
@@ -450,15 +578,21 @@
               this.state = State.PROBE_RECOVER;
             } else if (cmdLower === 'y') {
               if (this.stack.length > 0 && this.currentStructure.log.length > 0) {
-                if (this.stack[this.stack.length - 1].startsWith('llm:\n')) this.stack.pop();
-                if (this.currentStructure.log[this.currentStructure.log.length - 1].type === 'response') this.currentStructure.log.pop();
+                if (this.stack[this.stack.length - 1].startsWith('llm:\n')) {
+                  this.stack.pop();
+                }
+                if (this.currentStructure.log[this.currentStructure.log.length - 1].type === 'response') {
+                  this.currentStructure.log.pop();
+                }
                 if (this.stack.length > 0 && this.stack[this.stack.length - 1].startsWith('user:\n')) {
                   this.lastInitiation = this.stack[this.stack.length - 1].slice('user:\n'.length);
                   this.stack.pop();
                 } else {
                   this.lastInitiation = '';
                 }
-                if (this.currentStructure.log.length > 0 && this.currentStructure.log[this.currentStructure.log.length - 1].type === 'initiation') this.currentStructure.log.pop();
+                if (this.currentStructure.log.length > 0 && this.currentStructure.log[this.currentStructure.log.length - 1].type === 'initiation') {
+                  this.currentStructure.log.pop();
+                }
                 this.state = State.PROBE_RECOVER_EDIT;
               } else {
                 this.lastInitiation = '';
@@ -517,6 +651,7 @@
               this.backdoorMode = (cmd === 'backdoor');
               this.state = State.CALIBRATE_WAIT;
               setTimeout(() => {
+                this.stopWait();
                 this.state = State.PROBE_RECOVER;
                 this.render();
               }, 3000);
@@ -530,6 +665,7 @@
               this.model = cmd;
               this.state = State.CALIBRATE_WAIT;
               setTimeout(() => {
+                this.stopWait();
                 this.state = State.PROBE_RECOVER;
                 this.render();
               }, 3000);
@@ -543,6 +679,7 @@
               this.apiKey = cmd;
               this.state = State.CALIBRATE_WAIT;
               setTimeout(() => {
+                this.stopWait();
                 this.state = State.PROBE_RECOVER;
                 this.render();
               }, 3000);
