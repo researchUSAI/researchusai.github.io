@@ -5,95 +5,20 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>nexus</title>
   <style>
-    body {
-      background: #181818;
-      color: #BDCEF1;
-      font-family: 'Courier New', monospace;
-      height: 100vh;
-      width: 100vw;
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-      display: flex;
-      flex-direction: column;
-      font-size: 16px;
-      line-height: 24px;
-      overflow: hidden;
-    }
-    #toolbar {
-      flex: 0 0 auto;
-      padding: 0.5em 1ch;
-      background: #222;
-      border-bottom: 1px solid #333;
-      display: flex;
-      gap: 1em;
-      align-items: center;
-    }
-    #toolbar button {
-      background: #333;
-      color: #BDCEF1;
-      border: 1px solid #555;
-      padding: 0.4em 1em;
-      font-family: inherit;
-      font-size: inherit;
-      cursor: pointer;
-    }
-    #toolbar button:hover {
-      background: #444;
-    }
-    #toolbar button:active {
-      background: #555;
-    }
-    #polarity-btn {
-      background: #BDCEF1;
-      color: #181818;
-      font-weight: bold;
-    }
-    #display-container {
-      flex: 1 1 auto;
-      display: flex;
-      flex-direction: column;
-      overflow: hidden;
-    }
-    #display {
-      flex: 1 1 auto;
-      overflow-y: auto;
-      padding: 1em 1ch;
-      white-space: pre-wrap;
-    }
-    #input {
-      flex: 0 0 auto;
-      border: none;
-      outline: none;
-      background: transparent;
-      color: inherit;
-      font-family: inherit;
-      font-size: inherit;
-      padding: 0 1ch;
-    }
-    #input .input-reverse {
-      background: #BDCEF1;
-      color: #181818;
-    }
-    #measure {
-      position: absolute;
-      visibility: hidden;
-      font-family: 'Courier New', monospace;
-      white-space: pre;
-    }
-    .reverse-video {
-      background: #BDCEF1;
-      color: #181818;
-    }
-    .config-value {
-      color: #BDCEF1;
-      background: #222;
-      padding: 0 0.5ch;
-      cursor: text;
-    }
-    .message-separator {
-      height: 1em;
-    }
+    body {background:#181818;color:#BDCEF1;font-family:'Courier New',monospace;height:100vh;width:100vw;margin:0;padding:0;box-sizing:border-box;display:flex;flex-direction:column;font-size:16px;line-height:24px;overflow:hidden;}
+    #toolbar {flex:0 0 auto;padding:0.5em 1ch;background:#222;border-bottom:1px solid #333;display:flex;gap:1em;align-items:center;}
+    #toolbar button {background:#333;color:#BDCEF1;border:1px solid #555;padding:0.4em 1em;font-family:inherit;font-size:inherit;cursor:pointer;}
+    #toolbar button:hover {background:#444;}
+    #toolbar button:active {background:#555;}
+    #polarity-btn {background:#BDCEF1;color:#181818;font-weight:bold;}
+    #display-container {flex:1 1 auto;display:flex;flex-direction:column;overflow:hidden;}
+    #display {flex:1 1 auto;overflow-y:auto;padding:1em 1ch;white-space:pre-wrap;}
+    #input {flex:0 0 auto;border:none;outline:none;background:transparent;color:inherit;font-family:inherit;font-size:inherit;padding:0 1ch;}
+    #input .input-reverse {background:#BDCEF1;color:#181818;}
+    #measure {position:absolute;visibility:hidden;font-family:'Courier New',monospace;white-space:pre;}
+    .reverse-video {background:#BDCEF1;color:#181818;}
+    .config-value {color:#BDCEF1;background:#222;padding:0 0.5ch;cursor:text;}
+    .message-separator {height:1em;}
   </style>
 </head>
 <body>
@@ -137,11 +62,25 @@
       }
       release() {
         this.releaseTime = new Date().toLocaleTimeString();
-        const blob = new Blob([JSON.stringify(this, null, 2)], { type: 'application/json' });
+
+        let text = `${this.date} ${this.day}`;
+        if (this.releaseTime) text += ` ${this.releaseTime}`;
+        text += '\n\n';
+
+        for (const entry of this.log) {
+          const time = new Date(entry.timestamp).toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'});
+          if (entry.type === 'initiation') {
+            text += `USER ${time}:\n${entry.probe.trim()}\n\n`;
+          } else if (entry.type === 'response') {
+            text += `LLM ${time}:\n${entry.probe.trim()}\n\n`;
+          }
+        }
+
+        const blob = new Blob([text.trim()], { type: 'text/plain' });
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
-        a.download = `${this.id}.json`;
+        a.download = 'nexus-export.txt';
         a.click();
         URL.revokeObjectURL(url);
       }
@@ -164,7 +103,6 @@
         this.input = document.getElementById('input');
         this.measure = document.getElementById('measure');
         this.backdoorMode = false;
-        this.allowDragAndDrop = true;
         this.lastInitiation = null;
         this.lastActionWasFileDrop = false;
         this.setupEvents();
@@ -174,9 +112,7 @@
       setupEvents() {
         window.addEventListener('resize', () => this.updateDimensions());
 
-        this.input.addEventListener('input', () => {
-          this.normalizeInput();
-        });
+        this.input.addEventListener('input', () => this.normalizeInput());
 
         document.addEventListener('keydown', async (e) => {
           if (e.key === 'Enter' && e.shiftKey) {
@@ -224,35 +160,11 @@
             }
           } else if (['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'].includes(e.key)) {
             return;
-          } else {
-            return;
-          }
-        });
-
-        document.addEventListener('dragover', (e) => {
-          if (this.allowDragAndDrop) e.preventDefault();
-        });
-        document.addEventListener('drop', async (e) => {
-          if (!this.allowDragAndDrop) return;
-          e.preventDefault();
-          const file = e.dataTransfer.files[0];
-          if (file && file.type === 'application/json' && this.structures.length < 99) {
-            const text = await file.text();
-            try {
-              const structure = JSON.parse(text);
-              if (this.isValidStructure(structure)) {
-                this.structures.push(structure);
-                this.lastActionWasFileDrop = true;
-                this.render();
-              }
-            } catch (error) {}
           }
         });
 
         document.getElementById('export-btn').addEventListener('click', () => {
-          if (this.currentStructure) {
-            this.currentStructure.release();
-          }
+          if (this.currentStructure) this.currentStructure.release();
         });
 
         document.getElementById('back-btn').addEventListener('click', () => {
@@ -277,13 +189,9 @@
           if (e.target.classList.contains('config-value')) {
             const id = e.target.id;
             const value = e.target.textContent.trim();
-            if (id === 'edit-endpoint') {
-              this.modelEndpoint = value;
-            } else if (id === 'edit-model') {
-              this.model = value;
-            } else if (id === 'edit-key') {
-              this.apiKey = value;
-            }
+            if (id === 'edit-endpoint') this.modelEndpoint = value;
+            if (id === 'edit-model') this.model = value;
+            if (id === 'edit-key') this.apiKey = value;
           }
         }, true);
 
@@ -291,33 +199,16 @@
           if (e.target.classList.contains('config-value')) {
             const id = e.target.id;
             const value = e.target.textContent.trim();
-            if (id === 'edit-endpoint') {
-              this.modelEndpoint = value;
-            } else if (id === 'edit-model') {
-              this.model = value;
-            } else if (id === 'edit-key') {
-              this.apiKey = value;
-            }
+            if (id === 'edit-endpoint') this.modelEndpoint = value;
+            if (id === 'edit-model') this.model = value;
+            if (id === 'edit-key') this.apiKey = value;
           }
         });
-      }
-
-      isValidStructure(s) {
-        if (typeof s !== 'object' || s === null) return false;
-        if (typeof s.id !== 'string' || typeof s.date !== 'string' || typeof s.day !== 'string') return false;
-        if (s.releaseTime !== null && typeof s.releaseTime !== 'string') return false;
-        if (!Array.isArray(s.log)) return false;
-        for (const entry of s.log) {
-          if (typeof entry.type !== 'string' || (entry.type !== 'initiation' && entry.type !== 'response')) return false;
-          if (typeof entry.id !== 'string' || typeof entry.timestamp !== 'number' || typeof entry.probe !== 'string') return false;
-        }
-        return true;
       }
 
       normalizeInput() {
         const selection = window.getSelection();
         let cursorOffset = 0;
-
         if (selection.rangeCount > 0) {
           const range = selection.getRangeAt(0);
           const preCaretRange = range.cloneRange();
@@ -327,28 +218,18 @@
         }
 
         const textContent = this.input.textContent;
-
         this.input.innerHTML = '';
         if (textContent) {
           const span = document.createElement('span');
           span.className = 'input-reverse';
           span.textContent = textContent;
           this.input.appendChild(span);
-
-          try {
-            const range = document.createRange();
-            const textNode = span.firstChild;
-            if (textNode) {
-              const offset = Math.min(cursorOffset, textNode.length);
-              range.setStart(textNode, offset);
-              range.collapse(true);
-              selection.removeAllRanges();
-              selection.addRange(range);
-            }
-          } catch (e) {
-            const range = document.createRange();
-            range.selectNodeContents(this.input);
-            range.collapse(false);
+          const range = document.createRange();
+          const textNode = span.firstChild;
+          if (textNode) {
+            const offset = Math.min(cursorOffset, textNode.length);
+            range.setStart(textNode, offset);
+            range.collapse(true);
             selection.removeAllRanges();
             selection.addRange(range);
           }
@@ -364,23 +245,6 @@
         const newLineHeight = window.innerHeight / 24;
         document.body.style.fontSize = `${newFontSize}px`;
         document.body.style.lineHeight = `${newLineHeight}px`;
-      }
-
-      startWait() {
-        this.dotCount = 0;
-        if (this.dotInterval) clearInterval(this.dotInterval);
-        this.dotInterval = setInterval(() => {
-          this.dotCount = (this.dotCount + 1) % 4;
-          this.render();
-        }, 1000);
-      }
-
-      stopWait() {
-        if (this.dotInterval) {
-          clearInterval(this.dotInterval);
-          this.dotInterval = null;
-        }
-        this.dotCount = 0;
       }
 
       scrollToBottom() {
@@ -413,19 +277,13 @@
         if (this.structures.length > 0) {
           for (const structure of this.structures) {
             for (const entry of structure.log) {
-              if (entry.type === 'initiation') {
-                fullProbe += `user:\n${entry.probe}\n`;
-              } else if (entry.type === 'response') {
-                fullProbe += `llm:\n${entry.probe}\n`;
-              }
+              if (entry.type === 'initiation') fullProbe += `user:\n${entry.probe}\n`;
+              else if (entry.type === 'response') fullProbe += `llm:\n${entry.probe}\n`;
             }
           }
         }
         
-        if (this.stack.length > 0) {
-          fullProbe += this.stack.join('');
-        }
-        
+        if (this.stack.length > 0) fullProbe += this.stack.join('');
         fullProbe += probe;
         
         try {
@@ -448,25 +306,25 @@
 
           const reader = response.body.getReader();
           let fullResponse = '';
+          let liveResponse = '';
 
           while (true) {
             const { done, value } = await reader.read();
             if (done) break;
 
             const chunk = new TextDecoder().decode(value);
+            liveResponse += chunk;
             fullResponse += chunk;
 
-            // Only add/update the llm: block once content exists
             if (this.stack.length > 0 && this.stack[this.stack.length - 1].startsWith('llm:\n')) {
-              this.stack[this.stack.length - 1] = `llm:\n${fullResponse}`;
+              this.stack[this.stack.length - 1] = `llm:\n${liveResponse}`;
             } else {
-              this.stack.push(`llm:\n${fullResponse}`);
+              this.stack.push(`llm:\n${liveResponse}`);
             }
 
             this.render();
           }
 
-          // Save to JSON log exactly once
           this.currentStructure.addResponse(fullResponse);
 
           return fullResponse;
@@ -480,22 +338,16 @@
         const modelEl = document.getElementById('edit-model');
         const keyEl = document.getElementById('edit-key');
         
-        if (endpointEl && endpointEl.textContent.trim() !== 'NULL') {
-          this.modelEndpoint = endpointEl.textContent.trim();
-        }
-        if (modelEl && modelEl.textContent.trim() !== 'NULL') {
-          this.model = modelEl.textContent.trim();
-        }
-        if (keyEl && keyEl.textContent.trim() !== 'NULL') {
-          this.apiKey = keyEl.textContent.trim();
-        }
+        if (endpointEl) this.modelEndpoint = endpointEl.textContent.trim() || 'https://api.x.ai';
+        if (modelEl) this.model = modelEl.textContent.trim() || 'grok-3';
+        if (keyEl) this.apiKey = keyEl.textContent.trim();
 
         let output = '';
         const structures = this.formatStructures();
         let blockInput = false;
 
-        output += 'endpoint: <span id="edit-endpoint" class="config-value" contenteditable="true">' + (this.modelEndpoint || 'https://api.x.ai') + '</span>\n';
-        output += 'model: <span id="edit-model" class="config-value" contenteditable="true">' + (this.model || 'grok-3') + '</span>\n';
+        output += 'endpoint: <span id="edit-endpoint" class="config-value" contenteditable="true">' + this.modelEndpoint + '</span>\n';
+        output += 'model: <span id="edit-model" class="config-value" contenteditable="true">' + this.model + '</span>\n';
         output += 'key: <span id="edit-key" class="config-value" contenteditable="true">' + (this.apiKey || 'NULL') + '</span>\n';
 
         switch(this.state) {
@@ -511,6 +363,7 @@
             } else {
               output += '<span class="reverse-video">user:' + (this.currentProbe ? '\n' + this.currentProbe : '') + '</span><div class="message-separator"></div>';
             }
+            output += 'llm:\n';
             blockInput = true;
             break;
           case State.PROBE_RECOVER_CONFIRM:
@@ -523,13 +376,13 @@
             if (this.stack.length > 0) output += this.formatStack();
             break;
           case State.CALIBRATE_ENDPOINT_RECOVER:
-            output += '/route\n<span class="reverse-video">endpoint: ' + (this.modelEndpoint || 'https://api.x.ai') + '</span>';
+            output += '/route\n<span class="reverse-video">endpoint: ' + this.modelEndpoint + '</span>';
             break;
           case State.CALIBRATE_MODEL_RECOVER:
-            output += '/route\n<span class="reverse-video">model: ' + (this.model || 'grok-3') + '</span>';
+            output += '/route\n<span class="reverse-video">model: ' + this.model + '</span>';
             break;
           case State.CALIBRATE_KEY_RECOVER:
-            output += '/route\n<span class="reverse-video">key: ' + (this.apiKey || 'NULL') + '</span>';
+            output += '/route\n<span class="reverse-video">key: ' + this.apiKey + '</span>';
             break;
           case State.CALIBRATE_WAIT:
             output += 'processing...';
@@ -582,8 +435,10 @@
               this.currentStructure.addInitiation(cmd);
               this.lastActionWasFileDrop = false;
               this.state = State.PROBE_WAIT;
+              this.startWait();
               this.currentProbe = cmd;
               const response = await this.coordinate(cmd);
+              this.stopWait();
               this.state = State.PROBE_RECOVER_RESPONSE;
               this.lastInitiation = null;
             }
@@ -595,21 +450,15 @@
               this.state = State.PROBE_RECOVER;
             } else if (cmdLower === 'y') {
               if (this.stack.length > 0 && this.currentStructure.log.length > 0) {
-                if (this.stack[this.stack.length - 1].startsWith('llm:\n')) {
-                  this.stack.pop();
-                }
-                if (this.currentStructure.log[this.currentStructure.log.length - 1].type === 'response') {
-                  this.currentStructure.log.pop();
-                }
+                if (this.stack[this.stack.length - 1].startsWith('llm:\n')) this.stack.pop();
+                if (this.currentStructure.log[this.currentStructure.log.length - 1].type === 'response') this.currentStructure.log.pop();
                 if (this.stack.length > 0 && this.stack[this.stack.length - 1].startsWith('user:\n')) {
                   this.lastInitiation = this.stack[this.stack.length - 1].slice('user:\n'.length);
                   this.stack.pop();
                 } else {
                   this.lastInitiation = '';
                 }
-                if (this.currentStructure.log.length > 0 && this.currentStructure.log[this.currentStructure.log.length - 1].type === 'initiation') {
-                  this.currentStructure.log.pop();
-                }
+                if (this.currentStructure.log.length > 0 && this.currentStructure.log[this.currentStructure.log.length - 1].type === 'initiation') this.currentStructure.log.pop();
                 this.state = State.PROBE_RECOVER_EDIT;
               } else {
                 this.lastInitiation = '';
@@ -651,8 +500,10 @@
               }
               this.lastActionWasFileDrop = false;
               this.state = State.PROBE_WAIT;
+              this.startWait();
               this.currentProbe = cmd;
               const response = await this.coordinate(cmd);
+              this.stopWait();
               this.state = State.PROBE_RECOVER_RESPONSE;
               this.lastInitiation = null;
             }
