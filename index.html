@@ -468,7 +468,7 @@
             liveResponse += chunk;
             fullResponse += chunk;
 
-            // Update the last entry in place (no pop/push spam)
+            // Update the last entry in place
             this.stack[this.stack.length - 1] = `llm:\n${liveResponse}`;
             this.render();
           }
@@ -476,7 +476,7 @@
           // Final save — exactly once
           this.currentStructure.addResponse(fullResponse);
 
-          // Make sure the final stack entry is clean
+          // Finalize the stack entry
           this.stack[this.stack.length - 1] = `llm:\n${fullResponse}`;
 
           return fullResponse;
@@ -602,7 +602,6 @@
               this.currentProbe = cmd;
               const response = await this.coordinate(cmd);
               this.stopWait();
-              this.stack.push(`llm:\n${response}`);
               this.currentStructure.addResponse(response);
               this.state = State.PROBE_RECOVER_RESPONSE;
               this.lastInitiation = null;
@@ -675,7 +674,6 @@
               this.currentProbe = cmd;
               const response = await this.coordinate(cmd);
               this.stopWait();
-              this.stack.push(`llm:\n${response}`);
               this.currentStructure.addResponse(response);
               this.state = State.PROBE_RECOVER_RESPONSE;
               this.lastInitiation = null;
