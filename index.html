@@ -112,7 +112,6 @@
     <div id="input" contenteditable="true"></div>
   </div>
   <span id="measure">M</span>
-
   <script>
     const State = {
       PROBE_RECOVER: 'probe_recover',
@@ -125,7 +124,6 @@
       CALIBRATE_KEY_RECOVER: 'calibrate_key_recover',
       CALIBRATE_WAIT: 'calibrate_wait',
     };
-
     class Structure {
       constructor() {
         this.id = `s_${Date.now()}`;
@@ -151,7 +149,6 @@
         URL.revokeObjectURL(url);
       }
     }
-
     class Nexus {
       constructor() {
         this.state = State.PROBE_RECOVER;
@@ -175,14 +172,11 @@
         this.setupEvents();
         this.updateDimensions();
       }
-
       setupEvents() {
         window.addEventListener('resize', () => this.updateDimensions());
-
         this.input.addEventListener('input', () => {
           this.normalizeInput();
         });
-
         document.addEventListener('keydown', async (e) => {
           if (e.key === 'Enter' && e.shiftKey) {
             e.preventDefault();
@@ -233,7 +227,6 @@
             return;
           }
         });
-
         document.addEventListener('dragover', (e) => {
           if (this.allowDragAndDrop) e.preventDefault();
         });
@@ -253,14 +246,12 @@
             } catch (error) {}
           }
         });
-
         // Toolbar buttons
         document.getElementById('export-btn').addEventListener('click', () => {
           if (this.currentStructure) {
             this.currentStructure.release();
           }
         });
-
         document.getElementById('back-btn').addEventListener('click', () => {
           if (this.lastActionWasFileDrop && this.structures.length > 0) {
             this.structures.pop();
@@ -272,13 +263,11 @@
           this.render();
           this.scrollToBottom();
         });
-
         document.getElementById('polarity-btn').addEventListener('click', () => {
           this.truth = !this.truth;
           document.getElementById('polarity-btn').textContent = this.truth ? 'Short' : 'Long';
           this.render();
         });
-
         // Edit listener for fields
         this.display.addEventListener('input', (e) => {
           if (e.target.classList.contains('config-value')) {
@@ -294,7 +283,6 @@
           }
         });
       }
-
       isValidStructure(s) {
         if (typeof s !== 'object' || s === null) return false;
         if (typeof s.id !== 'string' || typeof s.date !== 'string' || typeof s.day !== 'string') return false;
@@ -306,11 +294,9 @@
         }
         return true;
       }
-
       normalizeInput() {
         const selection = window.getSelection();
         let cursorOffset = 0;
-
         if (selection.rangeCount > 0) {
           const range = selection.getRangeAt(0);
           const preCaretRange = range.cloneRange();
@@ -318,16 +304,13 @@
           preCaretRange.setEnd(range.endContainer, range.endOffset);
           cursorOffset = preCaretRange.toString().length;
         }
-
         const textContent = this.input.textContent;
-
         this.input.innerHTML = '';
         if (textContent) {
           const span = document.createElement('span');
           span.className = 'input-reverse';
           span.textContent = textContent;
           this.input.appendChild(span);
-
           try {
             const range = document.createRange();
             const textNode = span.firstChild;
@@ -347,7 +330,6 @@
           }
         }
       }
-
       updateDimensions() {
         this.measure.style.fontSize = '100px';
         const measuredWidth = this.measure.offsetWidth;
@@ -358,7 +340,6 @@
         document.body.style.fontSize = `${newFontSize}px`;
         document.body.style.lineHeight = `${newLineHeight}px`;
       }
-
       startWait() {
         this.dotCount = 0;
         if (this.dotInterval) clearInterval(this.dotInterval);
@@ -367,7 +348,6 @@
           this.render();
         }, 1000);
       }
-
       stopWait() {
         if (this.dotInterval) {
           clearInterval(this.dotInterval);
@@ -375,7 +355,6 @@
         }
         this.dotCount = 0;
       }
-
       formatStructures() {
         if (this.structures.length === 0) return '';
         return this.structures.map((s, i) => {
@@ -383,7 +362,6 @@
           return `[${i}]: [${s.date}] [${s.day}] [${s.releaseTime || 'active'}] [${preview}...]`;
         }).join('\n');
       }
-
       formatStack() {
         return this.stack.map(line => {
           if (line.startsWith('user:\n')) {
@@ -396,7 +374,6 @@
           return line;
         }).join('');
       }
-
       async coordinate(probe) {
         let fullProbe = '';
         if (this.structures.length > 0) {
@@ -410,13 +387,10 @@
             }
           }
         }
-        
         if (this.stack.length > 0) {
           fullProbe += this.stack.join('');
         }
-        
         fullProbe += probe;
-        
         try {
           const response = await fetch(`${this.localBackend}/generate_prompt`, {
             method: 'POST',
@@ -429,15 +403,12 @@
               model: this.model
             })
           });
-
           if (!response.ok) {
             const err = await response.json();
             return `[ERROR: ${err.error || 'Backend failed'}]`;
           }
-
           const reader = response.body.getReader();
           let fullResponse = '';
-
           while (true) {
             const { done, value } = await reader.read();
             if (done) break;
@@ -450,18 +421,15 @@
             this.render();
             this.scrollToBottom();
           }
-
           this.currentStructure.addResponse(fullResponse);
           return fullResponse;
         } catch (e) {
           return `[ERROR: ${e.message || 'Network failure'}]`;
         }
       }
-
       scrollToBottom() {
         this.display.scrollTop = this.display.scrollHeight;
       }
-
       render() {
         let output = '';
         const structures = this.formatStructures();
@@ -471,11 +439,9 @@
         else if (this.dotCount === 2) dots = '...';
         else dots = '';
         let blockInput = false;
-
         output += 'endpoint: <span id="edit-endpoint" class="config-value" contenteditable="true">' + (this.modelEndpoint || 'NULL') + '</span>\n';
         output += 'model: <span id="edit-model" class="config-value" contenteditable="true">' + (this.model || 'NULL') + '</span>\n';
         output += 'key: <span id="edit-key" class="config-value" contenteditable="true">' + (this.apiKey || 'NULL') + '</span>\n';
-
         switch(this.state) {
           case State.PROBE_RECOVER:
           case State.PROBE_RECOVER_RESPONSE:
@@ -515,20 +481,16 @@
             blockInput = true;
             break;
         }
-
         this.display.innerHTML = output;
         this.input.contentEditable = !blockInput;
         if (!blockInput) {
           this.input.textContent = '';
           this.input.focus();
         }
-
         this.scrollToBottom();
       }
-
       async process(cmd) {
         const cmdLower = cmd.toLowerCase();
-
         switch(this.state) {
           case State.PROBE_RECOVER:
           case State.PROBE_RECOVER_RESPONSE:
@@ -572,7 +534,6 @@
               this.lastInitiation = null;
             }
             break;
-
           case State.PROBE_RECOVER_CONFIRM:
             if (cmdLower === 'n') {
               this.lastInitiation = null;
@@ -601,7 +562,6 @@
               }
             }
             break;
-
           case State.PROBE_RECOVER_EDIT:
             if (cmdLower === '/release') {
               if (this.currentStructure) {
@@ -645,7 +605,6 @@
               this.lastInitiation = null;
             }
             break;
-
           case State.CALIBRATE_ENDPOINT_RECOVER:
             if (cmdLower === '/route') {
               this.state = State.PROBE_RECOVER;
@@ -661,7 +620,6 @@
               }, 3000);
             }
             break;
-
           case State.CALIBRATE_MODEL_RECOVER:
             if (cmdLower === '/route') {
               this.state = State.PROBE_RECOVER;
@@ -676,7 +634,6 @@
               }, 3000);
             }
             break;
-
           case State.CALIBRATE_KEY_RECOVER:
             if (cmdLower === '/route') {
               this.state = State.PROBE_RECOVER;
@@ -691,7 +648,6 @@
               }, 3000);
             }
             break;
-
           case State.CALIBRATE_WAIT:
             this.state = State.PROBE_RECOVER;
             break;
@@ -699,7 +655,6 @@
         this.render();
       }
     }
-
     const nexus = new Nexus();
     nexus.render();
   </script>
