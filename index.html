@@ -85,12 +85,6 @@
       background: #BDCEF1;
       color: #181818;
     }
-    .config-line {
-      margin-bottom: 0.5em;
-    }
-    .config-label {
-      color: #888;
-    }
     .config-value {
       color: #BDCEF1;
       background: #222;
@@ -255,7 +249,6 @@
           }
         });
 
-        // Toolbar buttons
         document.getElementById('export-btn').addEventListener('click', () => {
           if (this.currentStructure) {
             this.currentStructure.release();
@@ -280,7 +273,6 @@
           this.render();
         });
 
-        // Edit listener for fields - save current values FROM the display BEFORE render wipes them
         this.display.addEventListener('blur', (e) => {
           if (e.target.classList.contains('config-value')) {
             const id = e.target.id;
@@ -295,7 +287,6 @@
           }
         }, true);
 
-        // ALSO save on input for real-time updates
         this.display.addEventListener('input', (e) => {
           if (e.target.classList.contains('config-value')) {
             const id = e.target.id;
@@ -457,25 +448,25 @@
 
           const reader = response.body.getReader();
           let fullResponse = '';
-          let liveResponse = '';
 
           while (true) {
             const { done, value } = await reader.read();
             if (done) break;
-            
+
             const chunk = new TextDecoder().decode(value);
-            liveResponse += chunk;
             fullResponse += chunk;
 
+            // Only add/update the llm: block once content exists
             if (this.stack.length > 0 && this.stack[this.stack.length - 1].startsWith('llm:\n')) {
-              this.stack[this.stack.length - 1] = `llm:\n${liveResponse}`;
+              this.stack[this.stack.length - 1] = `llm:\n${fullResponse}`;
             } else {
-              this.stack.push(`llm:\n${liveResponse}`);
+              this.stack.push(`llm:\n${fullResponse}`);
             }
-            
+
             this.render();
           }
 
+          // Save to JSON log exactly once
           this.currentStructure.addResponse(fullResponse);
 
           return fullResponse;
@@ -520,7 +511,6 @@
             } else {
               output += '<span class="reverse-video">user:' + (this.currentProbe ? '\n' + this.currentProbe : '') + '</span><div class="message-separator"></div>';
             }
-            output += 'llm:\n';
             blockInput = true;
             break;
           case State.PROBE_RECOVER_CONFIRM:
@@ -592,10 +582,8 @@
               this.currentStructure.addInitiation(cmd);
               this.lastActionWasFileDrop = false;
               this.state = State.PROBE_WAIT;
-              this.startWait();
               this.currentProbe = cmd;
               const response = await this.coordinate(cmd);
-              this.stopWait();
               this.state = State.PROBE_RECOVER_RESPONSE;
               this.lastInitiation = null;
             }
@@ -663,10 +651,8 @@
               }
               this.lastActionWasFileDrop = false;
               this.state = State.PROBE_WAIT;
-              this.startWait();
               this.currentProbe = cmd;
               const response = await this.coordinate(cmd);
-              this.stopWait();
               this.state = State.PROBE_RECOVER_RESPONSE;
               this.lastInitiation = null;
             }
@@ -680,7 +666,6 @@
               this.backdoorMode = (cmd === 'backdoor');
               this.state = State.CALIBRATE_WAIT;
               setTimeout(() => {
-                this.stopWait();
                 this.state = State.PROBE_RECOVER;
                 this.render();
               }, 3000);
@@ -694,7 +679,6 @@
               this.model = cmd;
               this.state = State.CALIBRATE_WAIT;
               setTimeout(() => {
-                this.stopWait();
                 this.state = State.PROBE_RECOVER;
                 this.render();
               }, 3000);
@@ -708,7 +692,6 @@
               this.apiKey = cmd;
               this.state = State.CALIBRATE_WAIT;
               setTimeout(() => {
-                this.stopWait();
                 this.state = State.PROBE_RECOVER;
                 this.render();
               }, 3000);
