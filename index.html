@@ -160,8 +160,8 @@
         this.currentStructure = new Structure();
         this.stack = [];
         this.localBackend = 'https://researchnexus.onrender.com';
-        this.modelEndpoint = '';
-        this.model = '';
+        this.modelEndpoint = 'http://api.x.ai';     // HARDCODED
+        this.model = 'grok-3';                      // HARDCODED
         this.apiKey = '';
         this.truth = true;
         this.display = document.getElementById('display');
@@ -387,9 +387,9 @@
           if (line.startsWith('user:\n')) {
             const probe = line.slice('user:\n'.length);
             return '<span class="reverse-video">user:\n' + probe + '</span><div class="message-separator"></div>';
-          } else if (line.startsWith('llm:\n')) {
-            const response = line.slice('llm:\n'.length);
-            return 'llm:\n' + response + '<div class="message-separator"></div>';
+          } else if (line.startsWith('llm:')) {
+            const response = line.slice('llm:'.length);
+            return 'llm:' + response + '<div class="message-separator"></div>';
           }
           return line;
         }).join('');
@@ -435,7 +435,8 @@
 
           const reader = response.body.getReader();
           let fullResponse = '';
-          let hasAppendedHeader = false;
+
+          let isFirstChunk = true;
 
           while (true) {
             const { done, value } = await reader.read();
@@ -444,11 +445,11 @@
             const chunk = new TextDecoder().decode(value);
             fullResponse += chunk;
 
-            if (!hasAppendedHeader) {
-              this.stack.push(`llm:\n${fullResponse}`);
-              hasAppendedHeader = true;
+            if (isFirstChunk) {
+              this.stack.push(`llm:${fullResponse}`);
+              isFirstChunk = false;
             } else {
-              this.stack[this.stack.length - 1] = `llm:\n${fullResponse}`;
+              this.stack[this.stack.length - 1] = `llm:${fullResponse}`;
             }
 
             this.render();
@@ -481,9 +482,9 @@
         const structures = this.formatStructures();
         let blockInput = false;
 
-        output += 'endpoint: <span id="edit-endpoint" class="config-value" contenteditable="true">' + (this.modelEndpoint || 'NULL') + '</span>\n';
-        output += 'model: <span id="edit-model" class="config-value" contenteditable="true">' + (this.model || 'NULL') + '</span>\n';
-        output += 'key: <span id="edit-key" class="config-value" contenteditable="true">' + (this.apiKey || 'NULL') + '</span>\n';
+        output += 'endpoint: <span id="edit-endpoint" class="config-value" contenteditable="true">' + (this.modelEndpoint || 'http://api.x.ai') + '</span>\n';
+        output += 'model: <span id="edit-model" class="config-value" contenteditable="true">' + (this.model || 'grok-3') + '</span>\n';
+        output += 'key: <span id="edit-key" class="config-value" contenteditable="true">' + (this.apiKey || 'NULL') + '</span>\n\n';
 
         switch(this.state) {
           case State.PROBE_RECOVER:
@@ -493,12 +494,8 @@
             break;
           case State.PROBE_WAIT:
             if (structures) output += structures + '\n';
-            if (this.stack.length > 0) {
-              output += this.formatStack();
-            } else {
-              output += '<span class="reverse-video">user:' + (this.currentProbe ? '\n' + this.currentProbe : '') + '</span><div class="message-separator"></div>';
-            }
-            output += 'llm:\n';  // single header while waiting
+            output += this.formatStack();
+            output += '<span class="reverse-video">user:\n' + (this.currentProbe || '') + '</span>\n';
             blockInput = true;
             break;
           case State.PROBE_RECOVER_CONFIRM:
@@ -511,10 +508,10 @@
             if (this.stack.length > 0) output += this.formatStack();
             break;
           case State.CALIBRATE_ENDPOINT_RECOVER:
-            output += '/route\n<span class="reverse-video">endpoint: ' + (this.modelEndpoint || 'NULL') + '</span>';
+            output += '/route\n<span class="reverse-video">endpoint: ' + (this.modelEndpoint || 'http://api.x.ai') + '</span>';
             break;
           case State.CALIBRATE_MODEL_RECOVER:
-            output += '/route\n<span class="reverse-video">model: ' + (this.model || 'NULL') + '</span>';
+            output += '/route\n<span class="reverse-video">model: ' + (this.model || 'grok-3') + '</span>';
             break;
           case State.CALIBRATE_KEY_RECOVER:
             output += '/route\n<span class="reverse-video">key: ' + (this.apiKey || 'NULL') + '</span>';
@@ -584,7 +581,7 @@
               this.state = State.PROBE_RECOVER;
             } else if (cmdLower === 'y') {
               if (this.stack.length > 0 && this.currentStructure.log.length > 0) {
-                if (this.stack[this.stack.length - 1].startsWith('llm:\n')) {
+                if (this.stack[this.stack.length - 1].startsWith('llm:')) {
                   this.stack.pop();
                 }
                 if (this.currentStructure.log[this.currentStructure.log.length - 1].type === 'response') {
