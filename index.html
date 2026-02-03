@@ -280,7 +280,22 @@
           this.render();
         });
 
-        // Edit listener for fields
+        // Edit listener for fields - save current values FROM the display BEFORE render wipes them
+        this.display.addEventListener('blur', (e) => {
+          if (e.target.classList.contains('config-value')) {
+            const id = e.target.id;
+            const value = e.target.textContent.trim();
+            if (id === 'edit-endpoint') {
+              this.modelEndpoint = value;
+            } else if (id === 'edit-model') {
+              this.model = value;
+            } else if (id === 'edit-key') {
+              this.apiKey = value;
+            }
+          }
+        }, true);
+
+        // ALSO save on input for real-time updates
         this.display.addEventListener('input', (e) => {
           if (e.target.classList.contains('config-value')) {
             const id = e.target.id;
@@ -463,6 +478,21 @@
       }
 
       render() {
+        // CRITICAL: Save current config field values BEFORE wiping the display
+        const endpointEl = document.getElementById('edit-endpoint');
+        const modelEl = document.getElementById('edit-model');
+        const keyEl = document.getElementById('edit-key');
+        
+        if (endpointEl && endpointEl.textContent.trim() !== 'NULL') {
+          this.modelEndpoint = endpointEl.textContent.trim();
+        }
+        if (modelEl && modelEl.textContent.trim() !== 'NULL') {
+          this.model = modelEl.textContent.trim();
+        }
+        if (keyEl && keyEl.textContent.trim() !== 'NULL') {
+          this.apiKey = keyEl.textContent.trim();
+        }
+
         let output = '';
         const structures = this.formatStructures();
         let dots = '';
