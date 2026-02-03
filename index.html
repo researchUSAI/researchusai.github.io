@@ -474,7 +474,7 @@
 
         output += 'endpoint: <span id="edit-endpoint" class="config-value" contenteditable="true">' + (this.modelEndpoint || 'NULL') + '</span>\n';
         output += 'model: <span id="edit-model" class="config-value" contenteditable="true">' + (this.model || 'NULL') + '</span>\n';
-        output += 'key: <span id="edit-key" class="config-value" contenteditable="true">' + (this.apiKey || 'NULL') + '</span>\n';
+        output += 'key: <span id="edit-key" class="config-value" contenteditable="true">' + (this.apiKey || 'NULL') + '</span>\n\n';  // one blank line after config
 
         switch(this.state) {
           case State.PROBE_RECOVER:
