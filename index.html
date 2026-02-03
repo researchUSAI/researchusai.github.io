@@ -160,8 +160,8 @@
         this.currentStructure = new Structure();
         this.stack = [];
         this.localBackend = 'https://researchnexus.onrender.com';
-        this.modelEndpoint = '';
-        this.model = '';
+        this.modelEndpoint = 'https://api.x.ai';
+        this.model = 'grok-3';
         this.apiKey = '';
         this.truth = true;
         this.dotCount = 0;
@@ -255,6 +255,7 @@
           }
         });
 
+        // Toolbar buttons
         document.getElementById('export-btn').addEventListener('click', () => {
           if (this.currentStructure) {
             this.currentStructure.release();
@@ -279,6 +280,7 @@
           this.render();
         });
 
+        // Edit listener for fields - save current values FROM the display BEFORE render wipes them
         this.display.addEventListener('blur', (e) => {
           if (e.target.classList.contains('config-value')) {
             const id = e.target.id;
@@ -293,6 +295,7 @@
           }
         }, true);
 
+        // ALSO save on input for real-time updates
         this.display.addEventListener('input', (e) => {
           if (e.target.classList.contains('config-value')) {
             const id = e.target.id;
@@ -456,24 +459,24 @@
           let fullResponse = '';
           let liveResponse = '';
 
-          this.stack.push('llm:\n');
-          this.render();
-
           while (true) {
             const { done, value } = await reader.read();
             if (done) break;
-
+            
             const chunk = new TextDecoder().decode(value);
             liveResponse += chunk;
             fullResponse += chunk;
 
-            this.stack[this.stack.length - 1] = `llm:\n${liveResponse}`;
+            if (this.stack.length > 0 && this.stack[this.stack.length - 1].startsWith('llm:\n')) {
+              this.stack[this.stack.length - 1] = `llm:\n${liveResponse}`;
+            } else {
+              this.stack.push(`llm:\n${liveResponse}`);
+            }
+            
             this.render();
           }
 
           this.currentStructure.addResponse(fullResponse);
-
-          this.stack[this.stack.length - 1] = `llm:\n${fullResponse}`;
 
           return fullResponse;
         } catch (e) {
@@ -498,15 +501,10 @@
 
         let output = '';
         const structures = this.formatStructures();
-        let dots = '';
-        if (this.dotCount === 0) dots = '.';
-        else if (this.dotCount === 1) dots = '..';
-        else if (this.dotCount === 2) dots = '...';
-        else dots = '';
         let blockInput = false;
 
-        output += 'endpoint: <span id="edit-endpoint" class="config-value" contenteditable="true">' + (this.modelEndpoint || 'NULL') + '</span>\n';
-        output += 'model: <span id="edit-model" class="config-value" contenteditable="true">' + (this.model || 'NULL') + '</span>\n';
+        output += 'endpoint: <span id="edit-endpoint" class="config-value" contenteditable="true">' + (this.modelEndpoint || 'https://api.x.ai') + '</span>\n';
+        output += 'model: <span id="edit-model" class="config-value" contenteditable="true">' + (this.model || 'grok-3') + '</span>\n';
         output += 'key: <span id="edit-key" class="config-value" contenteditable="true">' + (this.apiKey || 'NULL') + '</span>\n';
 
         switch(this.state) {
@@ -522,7 +520,7 @@
             } else {
               output += '<span class="reverse-video">user:' + (this.currentProbe ? '\n' + this.currentProbe : '') + '</span><div class="message-separator"></div>';
             }
-            output += 'llm:\n' + dots;
+            output += 'llm:\n';
             blockInput = true;
             break;
           case State.PROBE_RECOVER_CONFIRM:
@@ -535,16 +533,16 @@
             if (this.stack.length > 0) output += this.formatStack();
             break;
           case State.CALIBRATE_ENDPOINT_RECOVER:
-            output += '/route\n<span class="reverse-video">endpoint: ' + (this.modelEndpoint || 'NULL') + '</span>';
+            output += '/route\n<span class="reverse-video">endpoint: ' + (this.modelEndpoint || 'https://api.x.ai') + '</span>';
             break;
           case State.CALIBRATE_MODEL_RECOVER:
-            output += '/route\n<span class="reverse-video">model: ' + (this.model || 'NULL') + '</span>';
+            output += '/route\n<span class="reverse-video">model: ' + (this.model || 'grok-3') + '</span>';
             break;
           case State.CALIBRATE_KEY_RECOVER:
             output += '/route\n<span class="reverse-video">key: ' + (this.apiKey || 'NULL') + '</span>';
             break;
           case State.CALIBRATE_WAIT:
-            output += dots;
+            output += 'processing...';
             blockInput = true;
             break;
         }
@@ -681,7 +679,6 @@
               this.modelEndpoint = cmd;
               this.backdoorMode = (cmd === 'backdoor');
               this.state = State.CALIBRATE_WAIT;
-              this.startWait();
               setTimeout(() => {
                 this.stopWait();
                 this.state = State.PROBE_RECOVER;
@@ -696,7 +693,6 @@
             } else {
               this.model = cmd;
               this.state = State.CALIBRATE_WAIT;
-              this.startWait();
               setTimeout(() => {
                 this.stopWait();
                 this.state = State.PROBE_RECOVER;
@@ -711,7 +707,6 @@
             } else {
               this.apiKey = cmd;
               this.state = State.CALIBRATE_WAIT;
-              this.startWait();
               setTimeout(() => {
                 this.stopWait();
                 this.state = State.PROBE_RECOVER;
