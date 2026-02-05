@@ -541,16 +541,11 @@
         }
         if (keyEl) {
           const keyText = keyEl.textContent.trim();
-          // If it's all bullets, use the stored actual key
-          if (keyText.match(/^•+$/)) {
-            const actualKey = keyEl.getAttribute('data-actual-key');
-            if (actualKey) {
-              this.apiKey = actualKey;
-            }
-          } else if (keyText !== 'NULL') {
-            // User edited it, use the new value
+          // Only update apiKey if it's NOT bullets (meaning user edited it)
+          if (!keyText.match(/^•+$/) && keyText !== 'NULL' && keyText !== '') {
             this.apiKey = keyText;
           }
+          // If it's bullets or NULL, keep the existing this.apiKey value
         }
         if (preferenceEl && preferenceEl.textContent.trim() !== 'NULL') {
           this.preference = preferenceEl.textContent.trim();
