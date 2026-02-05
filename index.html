@@ -101,6 +101,8 @@
     <button id="export-btn">Export</button>
     <button id="back-btn">Back</button>
     <button id="polarity-btn">Short</button>
+    <button id="support-btn">Support Us</button>
+    <button id="getkey-btn">Get Key</button>
   </div>
   <div id="display-container">
     <div id="display"></div>
@@ -171,6 +173,7 @@
         this.modelEndpoint = 'https://api.x.ai';
         this.model = 'grok-3';
         this.apiKey = '';
+        this.preference = '';
         this.truth = true;
         this.dotCount = 0;
         this.dotInterval = null;
@@ -266,6 +269,14 @@
           this.render();
         });
 
+        document.getElementById('support-btn').addEventListener('click', () => {
+          window.open('https://ko-fi.com/researchkofi', '_blank');
+        });
+
+        document.getElementById('getkey-btn').addEventListener('click', () => {
+          window.open('https://console.x.ai/team/4e4cc61f-c596-41c2-91ab-78a1258ac206', '_blank');
+        });
+
         this.display.addEventListener('blur', (e) => {
           if (e.target.classList.contains('config-value')) {
             const id = e.target.id;
@@ -276,6 +287,8 @@
               this.model = value;
             } else if (id === 'edit-key') {
               this.apiKey = value;
+            } else if (id === 'edit-preference') {
+              this.preference = value;
             }
           }
         }, true);
@@ -290,6 +303,8 @@
               this.model = value;
             } else if (id === 'edit-key') {
               this.apiKey = value;
+            } else if (id === 'edit-preference') {
+              this.preference = value;
             }
           }
         });
@@ -416,6 +431,7 @@
             body: JSON.stringify({
               probe: fullProbe,
               truth: this.truth,
+              preference: this.preference,
               base_url: this.modelEndpoint,
               api_key: this.apiKey,
               model: this.model
@@ -461,6 +477,7 @@
         const endpointEl = document.getElementById('edit-endpoint');
         const modelEl = document.getElementById('edit-model');
         const keyEl = document.getElementById('edit-key');
+        const preferenceEl = document.getElementById('edit-preference');
         
         if (endpointEl && endpointEl.textContent.trim() !== 'NULL') {
           this.modelEndpoint = endpointEl.textContent.trim();
@@ -471,6 +488,9 @@
         if (keyEl && keyEl.textContent.trim() !== 'NULL') {
           this.apiKey = keyEl.textContent.trim();
         }
+        if (preferenceEl && preferenceEl.textContent.trim() !== 'NULL') {
+          this.preference = preferenceEl.textContent.trim();
+        }
 
         let output = '';
         const structures = this.formatStructures();
@@ -479,6 +499,7 @@
         output += 'endpoint: <span id="edit-endpoint" class="config-value" contenteditable="true">' + (this.modelEndpoint || 'https://api.x.ai') + '</span>\n';
         output += 'model: <span id="edit-model" class="config-value" contenteditable="true">' + (this.model || 'grok-3') + '</span>\n';
         output += 'key: <span id="edit-key" class="config-value" contenteditable="true">' + (this.apiKey || 'NULL') + '</span>\n';
+        output += 'preference: <span id="edit-preference" class="config-value" contenteditable="true">' + (this.preference || 'NULL') + '</span>\n';
 
         switch(this.state) {
           case State.PROBE_RECOVER:
