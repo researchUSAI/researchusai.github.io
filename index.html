@@ -312,6 +312,25 @@
           window.open('https://console.x.ai/team/4e4cc61f-c596-41c2-91ab-78a1258ac206', '_blank');
         });
 
+        this.display.addEventListener('focus', (e) => {
+          if (e.target.id === 'edit-key') {
+            const keyText = e.target.textContent.trim();
+            // If showing masked bullets, reveal actual key for editing
+            if (keyText.match(/^•+$/)) {
+              const actualKey = e.target.getAttribute('data-actual-key');
+              if (actualKey) {
+                e.target.textContent = actualKey;
+                // Select all text for easy replacement
+                const range = document.createRange();
+                range.selectNodeContents(e.target);
+                const sel = window.getSelection();
+                sel.removeAllRanges();
+                sel.addRange(range);
+              }
+            }
+          }
+        }, true);
+
         this.display.addEventListener('blur', (e) => {
           if (e.target.classList.contains('config-value')) {
             const id = e.target.id;
@@ -520,8 +539,18 @@
         if (modelEl && modelEl.textContent.trim() !== 'NULL') {
           this.model = modelEl.textContent.trim();
         }
-        if (keyEl && keyEl.textContent.trim() !== 'NULL') {
-          this.apiKey = keyEl.textContent.trim();
+        if (keyEl) {
+          const keyText = keyEl.textContent.trim();
+          // If it's all bullets, use the stored actual key
+          if (keyText.match(/^•+$/)) {
+            const actualKey = keyEl.getAttribute('data-actual-key');
+            if (actualKey) {
+              this.apiKey = actualKey;
+            }
+          } else if (keyText !== 'NULL') {
+            // User edited it, use the new value
+            this.apiKey = keyText;
+          }
         }
         if (preferenceEl && preferenceEl.textContent.trim() !== 'NULL') {
           this.preference = preferenceEl.textContent.trim();
@@ -533,7 +562,8 @@
 
         output += 'endpoint: <span id="edit-endpoint" class="config-value" contenteditable="true">' + (this.modelEndpoint || 'https://api.x.ai') + '</span>\n';
         output += 'model: <span id="edit-model" class="config-value" contenteditable="true">' + (this.model || 'grok-3') + '</span>\n';
-        output += 'key: <span id="edit-key" class="config-value" contenteditable="true">' + (this.apiKey || 'NULL') + '</span>\n';
+        const maskedKey = (this.apiKey && this.apiKey !== 'NULL') ? '•'.repeat(this.apiKey.length) : 'NULL';
+        output += 'key: <span id="edit-key" class="config-value" contenteditable="true" data-actual-key="' + (this.apiKey || '') + '">' + maskedKey + '</span>\n';
         output += 'preference: <span id="edit-preference" class="config-value" contenteditable="true">' + (this.preference || 'NULL') + '</span>\n';
 
         switch(this.state) {
