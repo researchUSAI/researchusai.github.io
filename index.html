@@ -218,6 +218,7 @@
         this.backdoorMode = false;
         this.lastInitiation = null;
         this.lastActionWasFileDrop = false;
+        this.keyFieldBeingEdited = false;
         this.setupEvents();
         this.updateDimensions();
       }
@@ -314,6 +315,7 @@
 
         this.display.addEventListener('focus', (e) => {
           if (e.target.id === 'edit-key') {
+            this.keyFieldBeingEdited = true;
             const keyText = e.target.textContent.trim();
             // If showing masked bullets, reveal actual key for editing
             if (keyText.match(/^•+$/)) {
@@ -340,7 +342,12 @@
             } else if (id === 'edit-model') {
               this.model = value;
             } else if (id === 'edit-key') {
-              this.apiKey = value;
+              this.keyFieldBeingEdited = false;
+              if (!value.match(/^•+$/) && value !== 'NULL' && value !== '') {
+                this.apiKey = value;
+              }
+              // Re-render to mask the key
+              this.render();
             } else if (id === 'edit-preference') {
               this.preference = value;
             }
@@ -539,7 +546,7 @@
         if (modelEl && modelEl.textContent.trim() !== 'NULL') {
           this.model = modelEl.textContent.trim();
         }
-        if (keyEl) {
+        if (keyEl && !this.keyFieldBeingEdited) {
           const keyText = keyEl.textContent.trim();
           // Only update apiKey if it's NOT bullets (meaning user edited it)
           if (!keyText.match(/^•+$/) && keyText !== 'NULL' && keyText !== '') {
