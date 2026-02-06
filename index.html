@@ -105,6 +105,10 @@
       font-size: inherit;
       padding: 0 1ch;
       caret-color: transparent;
+      max-height: 10em;
+      overflow-y: auto;
+      white-space: pre-wrap;
+      word-wrap: break-word;
     }
     #input .input-reverse {
       background: #BDCEF1;
@@ -636,7 +640,12 @@
         this.display.innerHTML = output;
         this.input.contentEditable = !blockInput;
         if (!blockInput) {
-          this.input.textContent = '';
+          // If in edit mode, populate with lastInitiation
+          if (this.state === State.PROBE_RECOVER_EDIT && this.lastInitiation) {
+            this.input.textContent = this.lastInitiation;
+          } else {
+            this.input.textContent = '';
+          }
           this.input.focus();
         }
         this.scrollToBottom();
