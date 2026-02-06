@@ -298,8 +298,32 @@
             this.state = State.PROBE_RECOVER;
             this.render();
             this.scrollToBottom();
+          } else if (this.state === State.PROBE_RECOVER_EDIT && this.stack.length > 0) {
+            // Already in edit mode, go back one more level
+            if (confirm('Go back and edit an earlier message?')) {
+              if (this.stack.length > 0 && this.currentStructure.log.length > 0) {
+                if (this.stack[this.stack.length - 1].startsWith('llm:\n')) {
+                  this.stack.pop();
+                }
+                if (this.currentStructure.log[this.currentStructure.log.length - 1].type === 'response') {
+                  this.currentStructure.log.pop();
+                }
+                if (this.stack.length > 0 && this.stack[this.stack.length - 1].startsWith('user:\n')) {
+                  this.lastInitiation = this.stack[this.stack.length - 1].slice('user:\n'.length);
+                  this.stack.pop();
+                } else {
+                  this.lastInitiation = '';
+                }
+                if (this.currentStructure.log.length > 0 && this.currentStructure.log[this.currentStructure.log.length - 1].type === 'initiation') {
+                  this.currentStructure.log.pop();
+                }
+                this.state = State.PROBE_RECOVER_EDIT;
+              }
+              this.render();
+              this.scrollToBottom();
+            }
           } else if (this.stack.length > 0) {
-            // Show confirm dialog instead of terminal y/n
+            // Normal case - first time going back
             if (confirm('Go back and edit the last message?')) {
               // Yes - go back
               if (this.stack.length > 0 && this.currentStructure.log.length > 0) {
@@ -640,9 +664,13 @@
         this.display.innerHTML = output;
         this.input.contentEditable = !blockInput;
         if (!blockInput) {
-          // If in edit mode, populate with lastInitiation
+          // If in edit mode, populate with lastInitiation in reverse video
           if (this.state === State.PROBE_RECOVER_EDIT && this.lastInitiation) {
-            this.input.textContent = this.lastInitiation;
+            const span = document.createElement('span');
+            span.className = 'input-reverse';
+            span.textContent = this.lastInitiation;
+            this.input.innerHTML = '';
+            this.input.appendChild(span);
           } else {
             this.input.textContent = '';
           }
