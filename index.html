@@ -660,7 +660,10 @@
         }
         if (headerEl) {
           const headerText = headerEl.textContent;
-          this.header = (headerText !== 'NULL' && headerText !== '') ? headerText : '';
+          // Only update if it's not 'NULL' - preserve exact whitespace
+          if (headerText !== 'NULL') {
+            this.header = headerText;
+          }
         }
         if (preferenceEl && preferenceEl.textContent.trim() !== 'NULL') {
           this.preference = preferenceEl.textContent.trim();
@@ -674,7 +677,8 @@
         output += 'model: <span id="edit-model" class="config-value" contenteditable="true">' + (this.model || 'grok-3') + '</span>\n';
         const maskedKey = (this.apiKey && this.apiKey !== 'NULL') ? '•'.repeat(this.apiKey.length) : 'NULL';
         output += 'key: <span id="edit-key" class="config-value" contenteditable="true" data-actual-key="' + (this.apiKey || '') + '">' + maskedKey + '</span>\n';
-        const headerDisplay = this.header ? this.header.replace(/ /g, '&nbsp;') : 'NULL';
+        // Preserve all spaces by converting to &nbsp;
+        const headerDisplay = this.header ? this.header.split('').map(c => c === ' ' ? '&nbsp;' : c).join('') : 'NULL';
         output += 'header: <span id="edit-header" class="config-value" contenteditable="true">' + headerDisplay + '</span>\n';
         output += 'preference: <span id="edit-preference" class="config-value" contenteditable="true">' + (this.preference || 'NULL') + '</span>\n';
         output += '<div class="message-separator"></div>';
