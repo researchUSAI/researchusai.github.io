@@ -214,10 +214,12 @@
         if (this.releaseTime) text += `Released: ${this.releaseTime}\n`;
         text += '\n';
 
-        // Add zero-width non-joiner after each space to prevent trimming
-        let headerProtected = header;
+        // Count trailing spaces in header
+        let trailingSpaces = 0;
+        const headerTrimmed = header ? header.trimEnd() : '';
         if (header) {
-          headerProtected = header.replace(/ /g, ' \u200C');
+          const match = header.match(/( +)$/);
+          trailingSpaces = match ? match[1].length : 0;
         }
 
         for (const entry of this.log) {
@@ -225,7 +227,9 @@
           if (entry.type === 'initiation') {
             text += `USER ${time}:\n${entry.probe}\n\n`;
           } else if (entry.type === 'response') {
-            const responseWithHeader = headerProtected ? headerProtected + entry.probe : entry.probe;
+            // Add spaces at START of response so they can't be trimmed
+            const spacedResponse = ' '.repeat(trailingSpaces) + entry.probe;
+            const responseWithHeader = headerTrimmed ? headerTrimmed + spacedResponse : entry.probe;
             text += `LLM ${time}:\n${responseWithHeader}\n\n`;
           }
         }
@@ -455,14 +459,23 @@
           }
           
           if (lastResponse) {
-            // Add header to copied text
-            // Add zero-width non-joiner after each space to prevent trimming
-            let headerProtected = this.header;
+            // Count trailing spaces in header and reconstruct them INSIDE the response
+            let textToCopy = '';
             if (this.header) {
-              // Add invisible character after each space to prevent external apps from trimming
-              headerProtected = this.header.replace(/ /g, ' \u200C');
+              // Count trailing spaces
+              const match = this.header.match(/( +)$/);
+              const trailingSpaces = match ? match[1].length : 0;
+              
+              // Trim the header
+              const headerTrimmed = this.header.trimEnd();
+              
+              // Add spaces at the START of the response so they can't be trimmed
+              const spacedResponse = ' '.repeat(trailingSpaces) + lastResponse;
+              textToCopy = headerTrimmed + spacedResponse;
+            } else {
+              textToCopy = lastResponse;
             }
-            const textToCopy = headerProtected ? headerProtected + lastResponse : lastResponse;
+            
             navigator.clipboard.writeText(textToCopy).then(() => {
               btn.textContent = 'Copied!';
               setTimeout(() => {
