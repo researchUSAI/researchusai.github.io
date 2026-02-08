@@ -214,12 +214,22 @@
         if (this.releaseTime) text += `Released: ${this.releaseTime}\n`;
         text += '\n';
 
+        // Count trailing spaces in header
+        let trimmedHeader = '';
+        let trailingSpaceCount = 0;
+        if (header) {
+          trimmedHeader = header.trimEnd();
+          trailingSpaceCount = header.length - trimmedHeader.length;
+        }
+
         for (const entry of this.log) {
           const time = new Date(entry.timestamp).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
           if (entry.type === 'initiation') {
             text += `USER ${time}:\n${entry.probe}\n\n`;
           } else if (entry.type === 'response') {
-            const responseWithHeader = header ? header + entry.probe : entry.probe;
+            // Add trailing spaces to START of response
+            const spaces = ' '.repeat(trailingSpaceCount);
+            const responseWithHeader = trimmedHeader ? trimmedHeader + spaces + entry.probe : entry.probe;
             text += `LLM ${time}:\n${responseWithHeader}\n\n`;
           }
         }
@@ -449,8 +459,17 @@
           }
           
           if (lastResponse) {
-            // Just use the header exactly as stored - no manipulation
-            const textToCopy = this.header ? this.header + lastResponse : lastResponse;
+            let textToCopy = lastResponse;
+            
+            if (this.header) {
+              // Count trailing spaces
+              const trimmedHeader = this.header.trimEnd();
+              const trailingSpaceCount = this.header.length - trimmedHeader.length;
+              
+              // Add trailing spaces to the START of response
+              const spaces = ' '.repeat(trailingSpaceCount);
+              textToCopy = trimmedHeader + spaces + lastResponse;
+            }
             
             navigator.clipboard.writeText(textToCopy).then(() => {
               btn.textContent = 'Copied!';
