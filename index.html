@@ -134,7 +134,10 @@
       padding: 0 0.5ch;
       cursor: text;
       white-space: pre-wrap;
-      word-break: break-all;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 80ch;
+      display: inline-block;
     }
     .message-separator {
       height: 1em;
@@ -511,6 +514,7 @@
             selection.addRange(range);
           }
         }
+        this.scrollToBottom();
       }
 
       updateDimensions() {
@@ -659,8 +663,10 @@
           // If it's bullets or NULL, keep the existing this.apiKey value
         }
         if (headerEl) {
-          const headerText = headerEl.textContent;
-          // Only update if it's not 'NULL' - preserve exact whitespace
+          // Read innerHTML to preserve &nbsp; entities, then convert back to spaces
+          const headerHTML = headerEl.innerHTML;
+          const headerText = headerHTML.replace(/&nbsp;/g, ' ');
+          // Only update if it's not 'NULL' - preserve exact whitespace including trailing spaces
           if (headerText !== 'NULL') {
             this.header = headerText;
           }
@@ -675,10 +681,8 @@
 
         output += 'endpoint: <span id="edit-endpoint" class="config-value" contenteditable="true">' + (this.modelEndpoint || 'https://api.x.ai') + '</span>\n';
         output += 'model: <span id="edit-model" class="config-value" contenteditable="true">' + (this.model || 'grok-3') + '</span>\n';
-        const maskedKey = (this.apiKey && this.apiKey !== 'NULL') ? '•'.repeat(this.apiKey.length) : 'NULL';
-        output += 'key: <span id="edit-key" class="config-value" contenteditable="true" data-actual-key="' + (this.apiKey || '') + '">' + maskedKey + '</span>\n';
-        // Preserve all spaces by converting to &nbsp;
-        const headerDisplay = this.header ? this.header.split('').map(c => c === ' ' ? '&nbsp;' : c).join('') : 'NULL';
+        output += 'key: <span id="edit-key" class="config-value" contenteditable="true" data-actual-key="' + (this.apiKey || '') + '">NULL</span>\n';
+        const headerDisplay = this.header ? this.header.replace(/ /g, '&nbsp;') : 'NULL';
         output += 'header: <span id="edit-header" class="config-value" contenteditable="true">' + headerDisplay + '</span>\n';
         output += 'preference: <span id="edit-preference" class="config-value" contenteditable="true">' + (this.preference || 'NULL') + '</span>\n';
         output += '<div class="message-separator"></div>';
@@ -718,6 +722,16 @@
         }
 
         this.display.innerHTML = output;
+        
+        // Set masked key text content after HTML is rendered to preserve whitespace
+        if (!this.keyFieldBeingEdited) {
+          const keyElAfterRender = document.getElementById('edit-key');
+          if (keyElAfterRender) {
+            const maskedKey = (this.apiKey && this.apiKey !== 'NULL') ? '•'.repeat(this.apiKey.length) : 'NULL';
+            keyElAfterRender.textContent = maskedKey;
+          }
+        }
+        
         this.input.contentEditable = !blockInput;
         if (!blockInput) {
           // If in edit mode, populate with lastInitiation in reverse video
@@ -731,8 +745,10 @@
             this.input.textContent = '';
           }
           this.input.focus();
+          this.scrollToBottom();
+        } else {
+          this.scrollToBottom();
         }
-        this.scrollToBottom();
       }
 
       async process(cmd) {
