@@ -67,10 +67,12 @@
       background: #333;
       color: #BDCEF1;
       border: 1px solid #555;
-      padding: 0.4em 1em;
+      padding: 0.4em 0.8em;
       font-family: inherit;
-      font-size: inherit;
+      font-size: 0.85em;
       cursor: pointer;
+      min-width: 80px;
+      white-space: nowrap;
     }
     #toolbar button:hover {
       background: #444;
@@ -141,6 +143,7 @@
     <button id="back-btn">Back</button>
     <button id="toxic-btn">Normal</button>
     <button id="polarity-btn">Short Response</button>
+    <button id="copy-btn">Copy</button>
     <button id="support-btn">Support Us</button>
     <button id="getkey-btn">Get Key</button>
   </div>
@@ -213,6 +216,7 @@
         this.modelEndpoint = 'https://api.x.ai';
         this.model = 'grok-3';
         this.apiKey = '';
+        this.header = '';
         this.preference = '';
         this.truth = true;
         this.toxic = false;
@@ -371,6 +375,33 @@
           this.render();
         });
 
+        document.getElementById('copy-btn').addEventListener('click', () => {
+          // Find the most recent LLM response in the stack
+          let lastResponse = '';
+          for (let i = this.stack.length - 1; i >= 0; i--) {
+            if (this.stack[i].startsWith('llm:\n')) {
+              lastResponse = this.stack[i].slice('llm:\n'.length);
+              break;
+            }
+          }
+          
+          if (lastResponse) {
+            // Apply header if set
+            const textToCopy = this.header ? this.header + lastResponse : lastResponse;
+            navigator.clipboard.writeText(textToCopy).then(() => {
+              // Optional: provide visual feedback
+              const btn = document.getElementById('copy-btn');
+              const originalText = btn.textContent;
+              btn.textContent = 'Copied!';
+              setTimeout(() => {
+                btn.textContent = originalText;
+              }, 1000);
+            }).catch(() => {
+              alert('Failed to copy to clipboard');
+            });
+          }
+        });
+
         document.getElementById('support-btn').addEventListener('click', () => {
           window.open('https://ko-fi.com/researchkofi', '_blank');
         });
@@ -525,7 +556,8 @@
             return '<span class="reverse-video">post:\n' + probe + '</span><div class="message-separator"></div>';
           } else if (line.startsWith('llm:\n')) {
             const response = line.slice('llm:\n'.length);
-            return 'reply:\n' + response + '<div class="message-separator"></div>';
+            const displayResponse = this.header ? this.header + response : response;
+            return 'reply:\n' + displayResponse + '<div class="message-separator"></div>';
           }
           return line;
         }).join('');
@@ -605,6 +637,7 @@
         const endpointEl = document.getElementById('edit-endpoint');
         const modelEl = document.getElementById('edit-model');
         const keyEl = document.getElementById('edit-key');
+        const headerEl = document.getElementById('edit-header');
         const preferenceEl = document.getElementById('edit-preference');
         
         if (endpointEl && endpointEl.textContent.trim() !== 'NULL') {
@@ -621,6 +654,10 @@
           }
           // If it's bullets or NULL, keep the existing this.apiKey value
         }
+        if (headerEl) {
+          const headerText = headerEl.textContent.trim();
+          this.header = (headerText !== 'NULL' && headerText !== '') ? headerText : '';
+        }
         if (preferenceEl && preferenceEl.textContent.trim() !== 'NULL') {
           this.preference = preferenceEl.textContent.trim();
         }
@@ -633,6 +670,7 @@
         output += 'model: <span id="edit-model" class="config-value" contenteditable="true">' + (this.model || 'grok-3') + '</span>\n';
         const maskedKey = (this.apiKey && this.apiKey !== 'NULL') ? '•'.repeat(this.apiKey.length) : 'NULL';
         output += 'key: <span id="edit-key" class="config-value" contenteditable="true" data-actual-key="' + (this.apiKey || '') + '">' + maskedKey + '</span>\n';
+        output += 'header: <span id="edit-header" class="config-value" contenteditable="true">' + (this.header || 'NULL') + '</span>\n';
         output += 'preference: <span id="edit-preference" class="config-value" contenteditable="true">' + (this.preference || 'NULL') + '</span>\n';
         output += '<div class="message-separator"></div>';
 
