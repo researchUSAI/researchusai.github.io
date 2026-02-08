@@ -214,27 +214,17 @@
         if (this.releaseTime) text += `Released: ${this.releaseTime}\n`;
         text += '\n';
 
-        // Count trailing spaces in header
-        let trailingSpaces = 0;
-        const headerTrimmed = header ? header.trimEnd() : '';
-        if (header) {
-          const match = header.match(/( +)$/);
-          trailingSpaces = match ? match[1].length : 0;
-        }
-
         for (const entry of this.log) {
           const time = new Date(entry.timestamp).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
           if (entry.type === 'initiation') {
             text += `USER ${time}:\n${entry.probe}\n\n`;
           } else if (entry.type === 'response') {
-            // Add spaces at START of response so they can't be trimmed
-            const spacedResponse = ' '.repeat(trailingSpaces) + entry.probe;
-            const responseWithHeader = headerTrimmed ? headerTrimmed + spacedResponse : entry.probe;
+            const responseWithHeader = header ? header + entry.probe : entry.probe;
             text += `LLM ${time}:\n${responseWithHeader}\n\n`;
           }
         }
 
-        const blob = new Blob([text.trimEnd()], { type: 'text/plain' });
+        const blob = new Blob([text], { type: 'text/plain' });
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
@@ -459,22 +449,8 @@
           }
           
           if (lastResponse) {
-            // Count trailing spaces in header and reconstruct them INSIDE the response
-            let textToCopy = '';
-            if (this.header) {
-              // Count trailing spaces
-              const match = this.header.match(/( +)$/);
-              const trailingSpaces = match ? match[1].length : 0;
-              
-              // Trim the header
-              const headerTrimmed = this.header.trimEnd();
-              
-              // Add spaces at the START of the response so they can't be trimmed
-              const spacedResponse = ' '.repeat(trailingSpaces) + lastResponse;
-              textToCopy = headerTrimmed + spacedResponse;
-            } else {
-              textToCopy = lastResponse;
-            }
+            // Just use the header exactly as stored - no manipulation
+            const textToCopy = this.header ? this.header + lastResponse : lastResponse;
             
             navigator.clipboard.writeText(textToCopy).then(() => {
               btn.textContent = 'Copied!';
@@ -532,8 +508,8 @@
               const maskedKey = (this.apiKey && this.apiKey !== 'NULL') ? '•'.repeat(this.apiKey.length) : 'NULL';
               e.target.textContent = maskedKey;
             } else if (id === 'edit-header') {
-              // Use innerText to preserve whitespace - no trim()
-              let headerText = e.target.innerText;
+              // Use textContent to preserve exact whitespace - NO trim()
+              let headerText = e.target.textContent;
               // Keep NULL as special value, otherwise store exactly what user typed
               if (headerText === 'NULL') {
                 this.header = null;
@@ -556,8 +532,8 @@
             } else if (id === 'edit-key') {
               this.apiKey = e.target.textContent.trim();
             } else if (id === 'edit-header') {
-              // Use innerText to preserve whitespace
-              this.header = e.target.innerText;
+              // Use textContent to preserve exact whitespace - NO trim
+              this.header = e.target.textContent;
             } else if (id === 'edit-preference') {
               this.preference = e.target.textContent.trim();
             }
