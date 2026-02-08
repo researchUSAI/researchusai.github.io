@@ -219,9 +219,8 @@
           if (entry.type === 'initiation') {
             text += `USER ${time}:\n${entry.probe}\n\n`;
           } else if (entry.type === 'response') {
-            // NO TRIMMING - use header exactly as passed
-            const responseWithHeader = header ? header + entry.probe : entry.probe;
-            text += `LLM ${time}:\n${responseWithHeader}\n\n`;
+            // Response already has header built in - use it directly
+            text += `LLM ${time}:\n${entry.probe}\n\n`;
           }
         }
 
@@ -450,8 +449,8 @@
           }
           
           if (lastResponse) {
-            // NO TRIMMING - use header exactly as stored
-            const textToCopy = this.header ? this.header + lastResponse : lastResponse;
+            // Response already has header built in - use it directly
+            const textToCopy = lastResponse;
             
             navigator.clipboard.writeText(textToCopy).then(() => {
               btn.textContent = 'Copied!';
@@ -671,8 +670,8 @@
             return '<span class="reverse-video">post:\n' + probe + '</span><div class="message-separator"></div>';
           } else if (line.startsWith('llm:\n')) {
             const response = line.slice('llm:\n'.length);
-            const displayResponse = this.header ? this.header + response : response;
-            return 'reply:\n' + displayResponse + '<div class="message-separator"></div>';
+            // Response already has header built in - don't add it again
+            return 'reply:\n' + response + '<div class="message-separator"></div>';
           }
           return line;
         }).join('');
@@ -719,33 +718,32 @@
           }
 
           const reader = response.body.getReader();
-          let fullResponse = '';
-
-          let hasHeader = false;
+          let hasAddedHeader = false;
 
           while (true) {
             const { done, value } = await reader.read();
             if (done) break;
 
             const chunk = new TextDecoder().decode(value);
-            fullResponse += chunk;
-
-            if (!hasHeader) {
-              // Don't add header to stack, just mark that we've started
-              this.stack.push(`llm:\n${fullResponse}`);
-              hasHeader = true;
+            
+            if (!hasAddedHeader) {
+              // First chunk - prepend header once
+              const firstContent = this.header ? this.header + chunk : chunk;
+              this.stack.push(`llm:\n${firstContent}`);
+              hasAddedHeader = true;
             } else {
-              // Update without header
-              this.stack[this.stack.length - 1] = `llm:\n${fullResponse}`;
+              // Subsequent chunks - just append (no header)
+              this.stack[this.stack.length - 1] += chunk;
             }
 
             this.render();
           }
 
-          // Store final response WITHOUT header
-          this.currentStructure.addResponse(fullResponse);
+          // Extract complete response (with header) from stack
+          const completeResponse = this.stack[this.stack.length - 1].slice('llm:\n'.length);
+          this.currentStructure.addResponse(completeResponse);
 
-          return fullResponse;
+          return completeResponse;
         } catch (e) {
           return `[ERROR: ${e.message || 'Network failure'}]`;
         }
