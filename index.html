@@ -44,11 +44,16 @@
       0% { transform: translateY(0); }
       100% { transform: translateY(4px); }
     }
-    /* Blinking cursor */
-    #input::after {
-      content: '█';
+    /* Blinking cursor - now a real element, not pseudo */
+    #cursor {
+      position: fixed;
+      width: 1ch;
+      height: 1em;
+      background: #BDCEF1;
       animation: blink 1s step-end infinite;
-      color: #BDCEF1;
+      pointer-events: none;
+      z-index: 1000;
+      display: none;
     }
     @keyframes blink {
       0%, 50% { opacity: 1; }
@@ -156,6 +161,7 @@
   <div id="display-container">
     <div id="display"></div>
     <div id="input" contenteditable="true"></div>
+    <div id="cursor"></div>
   </div>
   <span id="measure">M</span>
 
@@ -230,6 +236,7 @@
         this.dotInterval = null;
         this.display = document.getElementById('display');
         this.input = document.getElementById('input');
+        this.cursor = document.getElementById('cursor');
         this.measure = document.getElementById('measure');
         this.backdoorMode = false;
         this.lastInitiation = null;
@@ -237,6 +244,7 @@
         this.keyFieldBeingEdited = false;
         this.setupEvents();
         this.updateDimensions();
+        this.cursor.style.display = 'none';
       }
 
       setupEvents() {
@@ -244,6 +252,28 @@
 
         this.input.addEventListener('input', () => {
           this.normalizeInput();
+        });
+
+        this.input.addEventListener('click', () => {
+          this.updateCursor();
+        });
+
+        this.input.addEventListener('focus', () => {
+          this.updateCursor();
+        });
+
+        this.input.addEventListener('blur', () => {
+          this.cursor.style.display = 'none';
+        });
+
+        this.input.addEventListener('keyup', () => {
+          this.updateCursor();
+        });
+
+        document.addEventListener('selectionchange', () => {
+          if (document.activeElement === this.input) {
+            this.updateCursor();
+          }
         });
 
         document.addEventListener('keydown', async (e) => {
@@ -256,40 +286,45 @@
             this.input.innerHTML = '';
             if (cmd) await this.process(cmd);
           } else if ((e.metaKey || e.ctrlKey) && (e.key === 'c' || e.key === 'C')) {
-            e.preventDefault();
-            const selection = window.getSelection();
-            const text = selection.toString() || this.input.textContent;
-            navigator.clipboard.writeText(text).catch(() => {});
+            // Let browser handle copy normally - don't prevent default
+            return;
           } else if ((e.metaKey || e.ctrlKey) && (e.key === 'v' || e.key === 'V')) {
-            e.preventDefault();
-            navigator.clipboard.readText().then(text => {
-              const selection = window.getSelection();
-              const span = document.createElement('span');
-              span.className = 'input-reverse';
-              span.textContent = text;
-              if (selection.rangeCount > 0) {
-                const range = selection.getRangeAt(0);
-                range.deleteContents();
-                range.insertNode(span);
-              } else {
-                this.input.appendChild(span);
-              }
-              const range = document.createRange();
-              range.setStartAfter(span);
-              range.collapse(true);
-              selection.removeAllRanges();
-              selection.addRange(range);
-            }).catch(() => {});
-          } else if ((e.metaKey || e.ctrlKey) && (e.key === 'x' || e.key === 'X')) {
-            e.preventDefault();
-            const selection = window.getSelection();
-            const text = selection.toString() || this.input.textContent;
-            navigator.clipboard.writeText(text).catch(() => {});
-            if (selection.rangeCount > 0) {
-              selection.getRangeAt(0).deleteContents();
-            } else {
-              this.input.innerHTML = '';
+            // Allow paste in config fields (let browser handle it)
+            if (document.activeElement && document.activeElement.classList.contains('config-value')) {
+              return;
             }
+            
+            // Allow paste in input field with reverse video styling
+            if (document.activeElement === this.input) {
+              e.preventDefault();
+              navigator.clipboard.readText().then(text => {
+                const selection = window.getSelection();
+                const span = document.createElement('span');
+                span.className = 'input-reverse';
+                span.textContent = text;
+                if (selection.rangeCount > 0) {
+                  const range = selection.getRangeAt(0);
+                  range.deleteContents();
+                  range.insertNode(span);
+                } else {
+                  this.input.appendChild(span);
+                }
+                const range = document.createRange();
+                range.setStartAfter(span);
+                range.collapse(true);
+                selection.removeAllRanges();
+                selection.addRange(range);
+                this.scrollToBottom();
+                this.updateCursor();
+              }).catch(() => {});
+              return;
+            }
+            
+            // Block paste everywhere else (display area, empty space)
+            e.preventDefault();
+          } else if ((e.metaKey || e.ctrlKey) && (e.key === 'x' || e.key === 'X')) {
+            // Let browser handle cut normally - don't prevent default
+            return;
           } else if (['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'].includes(e.key)) {
             return;
           } else {
@@ -382,6 +417,11 @@
         });
 
         document.getElementById('copy-btn').addEventListener('click', () => {
+          const btn = document.getElementById('copy-btn');
+          
+          // Prevent multiple clicks while copying
+          if (btn.textContent === 'Copied!') return;
+          
           // Find the most recent LLM response in the stack
           let lastResponse = '';
           for (let i = this.stack.length - 1; i >= 0; i--) {
@@ -392,15 +432,12 @@
           }
           
           if (lastResponse) {
-            // Apply header if set
+            // Copy plain text only - no HTML
             const textToCopy = this.header ? this.header + lastResponse : lastResponse;
             navigator.clipboard.writeText(textToCopy).then(() => {
-              // Optional: provide visual feedback
-              const btn = document.getElementById('copy-btn');
-              const originalText = btn.textContent;
               btn.textContent = 'Copied!';
               setTimeout(() => {
-                btn.textContent = originalText;
+                btn.textContent = 'Copy';
               }, 1000);
             }).catch(() => {
               alert('Failed to copy to clipboard');
@@ -439,21 +476,28 @@
         this.display.addEventListener('blur', (e) => {
           if (e.target.classList.contains('config-value')) {
             const id = e.target.id;
-            const value = e.target.textContent.trim();
             if (id === 'edit-endpoint') {
-              this.modelEndpoint = value;
+              this.modelEndpoint = e.target.textContent.trim();
             } else if (id === 'edit-model') {
-              this.model = value;
+              this.model = e.target.textContent.trim();
             } else if (id === 'edit-key') {
               this.keyFieldBeingEdited = false;
+              const value = e.target.textContent.trim();
               if (!value.match(/^•+$/) && value !== 'NULL' && value !== '') {
                 this.apiKey = value;
               }
               // Mask the key in place without re-rendering to prevent layout shift
               const maskedKey = (this.apiKey && this.apiKey !== 'NULL') ? '•'.repeat(this.apiKey.length) : 'NULL';
               e.target.textContent = maskedKey;
+            } else if (id === 'edit-header') {
+              // Read textContent and convert non-breaking spaces to regular spaces
+              let headerText = e.target.textContent;
+              headerText = headerText.replace(/\u00A0/g, ' ');
+              if (headerText !== 'NULL') {
+                this.header = headerText;
+              }
             } else if (id === 'edit-preference') {
-              this.preference = value;
+              this.preference = e.target.textContent.trim();
             }
           }
         }, true);
@@ -461,13 +505,16 @@
         this.display.addEventListener('input', (e) => {
           if (e.target.classList.contains('config-value')) {
             const id = e.target.id;
-            const value = e.target.textContent.trim();
+            const value = e.target.textContent;
             if (id === 'edit-endpoint') {
               this.modelEndpoint = value;
             } else if (id === 'edit-model') {
               this.model = value;
             } else if (id === 'edit-key') {
               this.apiKey = value;
+            } else if (id === 'edit-header') {
+              // Convert non-breaking spaces to regular spaces
+              this.header = value.replace(/\u00A0/g, ' ');
             } else if (id === 'edit-preference') {
               this.preference = value;
             }
@@ -515,6 +562,7 @@
           }
         }
         this.scrollToBottom();
+        this.updateCursor();
       }
 
       updateDimensions() {
@@ -547,6 +595,28 @@
 
       scrollToBottom() {
         this.display.scrollTop = this.display.scrollHeight;
+      }
+
+      updateCursor() {
+        if (document.activeElement !== this.input) {
+          this.cursor.style.display = 'none';
+          return;
+        }
+        
+        this.cursor.style.display = 'block';
+        
+        const selection = window.getSelection();
+        if (selection.rangeCount === 0) {
+          this.cursor.style.display = 'none';
+          return;
+        }
+        
+        const range = selection.getRangeAt(0);
+        const rect = range.getBoundingClientRect();
+        
+        // Use fixed positioning with screen coordinates
+        this.cursor.style.left = `${rect.left}px`;
+        this.cursor.style.top = `${rect.top}px`;
       }
 
       formatStructures() {
@@ -667,15 +737,6 @@
           }
           // If it's bullets or NULL, keep the existing this.apiKey value
         }
-        if (headerEl) {
-          // Read innerHTML to preserve &nbsp; entities, then convert back to spaces
-          const headerHTML = headerEl.innerHTML;
-          const headerText = headerHTML.replace(/&nbsp;/g, ' ');
-          // Only update if it's not 'NULL' - preserve exact whitespace including trailing spaces
-          if (headerText !== 'NULL') {
-            this.header = headerText;
-          }
-        }
         if (preferenceEl && preferenceEl.textContent.trim() !== 'NULL') {
           this.preference = preferenceEl.textContent.trim();
         }
@@ -746,10 +807,9 @@
             span.textContent = this.lastInitiation;
             this.input.innerHTML = '';
             this.input.appendChild(span);
-          } else {
-            this.input.textContent = '';
+            this.input.focus();
           }
-          this.input.focus();
+          // Otherwise preserve whatever is already in the input - don't clear it
           this.scrollToBottom();
         } else {
           this.scrollToBottom();
