@@ -507,9 +507,14 @@
               const maskedKey = (this.apiKey && this.apiKey !== 'NULL') ? '•'.repeat(this.apiKey.length) : 'NULL';
               e.target.textContent = maskedKey;
             } else if (id === 'edit-header') {
-              // Don't trim header - preserve whitespace
-              let headerText = e.target.textContent;
-              headerText = headerText.replace(/\u00A0/g, ' ');
+              // Read innerHTML to preserve &nbsp; entities
+              let headerHTML = e.target.innerHTML;
+              // Convert &nbsp; to regular spaces
+              let headerText = headerHTML.replace(/&nbsp;/g, ' ');
+              // Strip any other HTML tags but keep the text
+              const tempDiv = document.createElement('div');
+              tempDiv.innerHTML = headerText;
+              headerText = tempDiv.textContent || tempDiv.innerText || '';
               if (headerText !== 'NULL') {
                 this.header = headerText;
               }
@@ -529,9 +534,14 @@
             } else if (id === 'edit-key') {
               this.apiKey = e.target.textContent.trim();
             } else if (id === 'edit-header') {
-              // Don't trim header - preserve whitespace
-              let headerText = e.target.textContent;
-              headerText = headerText.replace(/\u00A0/g, ' ');
+              // Read innerHTML to preserve &nbsp; entities
+              let headerHTML = e.target.innerHTML;
+              // Convert &nbsp; to regular spaces
+              let headerText = headerHTML.replace(/&nbsp;/g, ' ');
+              // Strip any other HTML tags but keep the text
+              const tempDiv = document.createElement('div');
+              tempDiv.innerHTML = headerText;
+              headerText = tempDiv.textContent || tempDiv.innerText || '';
               this.header = headerText;
             } else if (id === 'edit-preference') {
               this.preference = e.target.textContent.trim();
@@ -768,15 +778,6 @@
             this.apiKey = keyText;
           }
           // If it's bullets or NULL, keep the existing this.apiKey value
-        }
-        if (headerEl) {
-          // Read innerHTML to preserve &nbsp; entities, then convert back to spaces
-          const headerHTML = headerEl.innerHTML;
-          const headerText = headerHTML.replace(/&nbsp;/g, ' ');
-          // Only update if it's not 'NULL' - preserve exact whitespace including trailing spaces
-          if (headerText !== 'NULL') {
-            this.header = headerText;
-          }
         }
         if (preferenceEl && preferenceEl.textContent.trim() !== 'NULL') {
           this.preference = preferenceEl.textContent.trim();
