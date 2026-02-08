@@ -109,6 +109,7 @@
       overflow-y: auto;
       padding: 1em 1ch;
       white-space: pre-wrap;
+      word-wrap: break-word;
     }
     #input {
       flex: 0 0 auto;
@@ -415,7 +416,6 @@
         document.getElementById('toxic-btn').addEventListener('click', () => {
           this.toxic = !this.toxic;
           document.getElementById('toxic-btn').textContent = this.toxic ? 'Toxic' : 'Normal';
-          this.render();
         });
 
         document.getElementById('polarity-btn').addEventListener('click', () => {
