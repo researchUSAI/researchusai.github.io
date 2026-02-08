@@ -50,7 +50,7 @@
       animation: blink 1s step-end infinite;
       color: #BDCEF1;
     }
-    /* Hide ::after when inline cursor is visible */
+    /* Hide ::after when inline cursor is active */
     #input.has-inline-cursor::after {
       display: none;
     }
@@ -207,7 +207,7 @@
       addResponse(probe) {
         this.log.push({ type: 'response', id: `r_${Date.now()}`, timestamp: Date.now(), probe });
       }
-      release() {
+      release(header) {
         this.releaseTime = new Date().toLocaleTimeString();
 
         let text = `${this.date} (${this.day})\n`;
@@ -219,7 +219,7 @@
           if (entry.type === 'initiation') {
             text += `USER ${time}:\n${entry.probe}\n\n`;
           } else if (entry.type === 'response') {
-            const responseWithHeader = this.header ? this.header + entry.probe : entry.probe;
+            const responseWithHeader = header ? header + entry.probe : entry.probe;
             text += `LLM ${time}:\n${responseWithHeader}\n\n`;
           }
         }
@@ -304,8 +304,12 @@
             // Let browser handle copy normally
             return;
           } else if ((e.metaKey || e.ctrlKey) && (e.key === 'v' || e.key === 'V')) {
-            // Allow paste in config fields (let browser handle it)
+            // Normalize paste in config fields - strip HTML and paste plain text
             if (document.activeElement && document.activeElement.classList.contains('config-value')) {
+              e.preventDefault();
+              navigator.clipboard.readText().then(text => {
+                document.execCommand('insertText', false, text);
+              }).catch(() => {});
               return;
             }
             
@@ -348,7 +352,7 @@
 
         document.getElementById('export-btn').addEventListener('click', () => {
           if (this.currentStructure) {
-            this.currentStructure.release();
+            this.currentStructure.release(this.header);
           }
         });
 
@@ -616,7 +620,19 @@
           return;
         }
 
-        // Get cursor position relative to display container
+        // Check if cursor is at the very end of input
+        const atEnd = range.endOffset === range.endContainer.length && 
+                      range.endContainer === this.input.lastChild?.firstChild || 
+                      (this.input.childNodes.length === 0);
+        
+        if (atEnd) {
+          // At end - ::after will show, hide inline cursor
+          this.inlineCursor.style.display = 'none';
+          this.input.classList.remove('has-inline-cursor');
+          return;
+        }
+
+        // Not at end - show inline cursor, hide ::after
         const rect = range.getBoundingClientRect();
         const containerRect = document.getElementById('display-container').getBoundingClientRect();
         
@@ -839,7 +855,7 @@
           case State.PROBE_RECOVER_RESPONSE:
             if (cmdLower === '/release') {
               if (this.currentStructure) {
-                this.currentStructure.release();
+                this.currentStructure.release(this.header);
                 return;
               }
             } else if (cmdLower === '/recover') {
@@ -907,7 +923,7 @@
           case State.PROBE_RECOVER_EDIT:
             if (cmdLower === '/release') {
               if (this.currentStructure) {
-                this.currentStructure.release();
+                this.currentStructure.release(this.header);
                 this.lastInitiation = null;
                 return;
               }
