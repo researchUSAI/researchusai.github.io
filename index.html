@@ -509,9 +509,8 @@
               const maskedKey = (this.apiKey && this.apiKey !== 'NULL') ? '•'.repeat(this.apiKey.length) : 'NULL';
               e.target.textContent = maskedKey;
             } else if (id === 'edit-header') {
-              // Use textContent to preserve exact whitespace - NO trim()
-              let headerText = e.target.textContent;
-              // Keep NULL as special value, otherwise store exactly what user typed
+              // Read from data attribute if available to preserve trailing spaces
+              let headerText = e.target.getAttribute('data-raw-header') || e.target.textContent;
               if (headerText === 'NULL') {
                 this.header = null;
               } else {
@@ -532,9 +531,11 @@
               this.model = e.target.textContent.trim();
             } else if (id === 'edit-key') {
               this.apiKey = e.target.textContent.trim();
-            } else if (id === 'edit-header') {
-              // Use textContent to preserve exact whitespace - NO trim
-              this.header = e.target.textContent;
+            } else if (id == 'edit-header') {
+              // Store raw value in data attribute to preserve trailing spaces
+              const headerText = e.target.textContent;
+              e.target.setAttribute('data-raw-header', headerText);
+              this.header = headerText;
             } else if (id === 'edit-preference') {
               this.preference = e.target.textContent.trim();
             }
@@ -783,7 +784,8 @@
         output += '<span class="reverse-video">model:</span> <span id="edit-model" class="config-value" contenteditable="true">' + (this.model || 'grok-3') + '</span>\n';
         output += '<span class="reverse-video">key:</span> <span id="edit-key" class="config-value" contenteditable="true" data-actual-key="' + (this.apiKey || '') + '">NULL</span>\n';
         const headerDisplay = this.header || 'NULL';
-        output += '<span class="reverse-video">header:</span> <span id="edit-header" class="config-value" contenteditable="true">' + headerDisplay + '</span>\n';
+        const headerAttr = (this.header || '').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+        output += '<span class="reverse-video">header:</span> <span id="edit-header" class="config-value" contenteditable="true" data-raw-header="' + headerAttr + '">' + headerDisplay + '</span>\n';
         output += '<span class="reverse-video">preference:</span> <span id="edit-preference" class="config-value" contenteditable="true">' + (this.preference || 'NULL') + '</span>\n';
         output += '<div class="message-separator"></div>';
 
