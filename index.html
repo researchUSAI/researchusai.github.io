@@ -214,10 +214,10 @@
         if (this.releaseTime) text += `Released: ${this.releaseTime}\n`;
         text += '\n';
 
-        // Convert regular spaces in header to non-breaking spaces
-        let headerWithNBSP = header;
+        // Add zero-width non-joiner after each space to prevent trimming
+        let headerProtected = header;
         if (header) {
-          headerWithNBSP = header.replace(/ /g, '\u00A0');
+          headerProtected = header.replace(/ /g, ' \u200C');
         }
 
         for (const entry of this.log) {
@@ -225,7 +225,7 @@
           if (entry.type === 'initiation') {
             text += `USER ${time}:\n${entry.probe}\n\n`;
           } else if (entry.type === 'response') {
-            const responseWithHeader = headerWithNBSP ? headerWithNBSP + entry.probe : entry.probe;
+            const responseWithHeader = headerProtected ? headerProtected + entry.probe : entry.probe;
             text += `LLM ${time}:\n${responseWithHeader}\n\n`;
           }
         }
@@ -456,13 +456,13 @@
           
           if (lastResponse) {
             // Add header to copied text
-            // Convert regular spaces in header to non-breaking spaces to preserve them in external apps
-            let headerWithNBSP = this.header;
+            // Add zero-width non-joiner after each space to prevent trimming
+            let headerProtected = this.header;
             if (this.header) {
-              // Replace regular spaces with non-breaking spaces to prevent trimming
-              headerWithNBSP = this.header.replace(/ /g, '\u00A0');
+              // Add invisible character after each space to prevent external apps from trimming
+              headerProtected = this.header.replace(/ /g, ' \u200C');
             }
-            const textToCopy = headerWithNBSP ? headerWithNBSP + lastResponse : lastResponse;
+            const textToCopy = headerProtected ? headerProtected + lastResponse : lastResponse;
             navigator.clipboard.writeText(textToCopy).then(() => {
               btn.textContent = 'Copied!';
               setTimeout(() => {
@@ -792,7 +792,7 @@
         output += '<span class="reverse-video">endpoint:</span> <span id="edit-endpoint" class="config-value" contenteditable="true">' + (this.modelEndpoint || 'https://api.x.ai') + '</span>\n';
         output += '<span class="reverse-video">model:</span> <span id="edit-model" class="config-value" contenteditable="true">' + (this.model || 'grok-3') + '</span>\n';
         output += '<span class="reverse-video">key:</span> <span id="edit-key" class="config-value" contenteditable="true" data-actual-key="' + (this.apiKey || '') + '">NULL</span>\n';
-        const headerDisplay = this.header ? this.header.replace(/ /g, '&nbsp;') : 'NULL';
+        const headerDisplay = this.header || 'NULL';
         output += '<span class="reverse-video">header:</span> <span id="edit-header" class="config-value" contenteditable="true">' + headerDisplay + '</span>\n';
         output += '<span class="reverse-video">preference:</span> <span id="edit-preference" class="config-value" contenteditable="true">' + (this.preference || 'NULL') + '</span>\n';
         output += '<div class="message-separator"></div>';
