@@ -158,6 +158,13 @@
       max-width: 78ch;
       display: inline;
     }
+    .config-value * {
+      color: inherit !important;
+      background: inherit !important;
+      font-family: inherit !important;
+      font-size: inherit !important;
+      line-height: inherit !important;
+    }
     .message-separator {
       height: 1em;
     }
@@ -304,7 +311,33 @@
             // Let browser handle copy normally
             return;
           } else if ((e.metaKey || e.ctrlKey) && (e.key === 'v' || e.key === 'V')) {
-            // Let browser handle paste normally
+            // Intercept paste in config fields to strip formatting
+            if (document.activeElement && document.activeElement.classList.contains('config-value')) {
+              e.preventDefault();
+              // Get plain text from clipboard
+              const text = e.clipboardData ? e.clipboardData.getData('text/plain') : '';
+              if (text) {
+                // Insert as plain text without any formatting
+                document.execCommand('insertText', false, text);
+                // Normalize to plain text
+                setTimeout(() => {
+                  const target = document.activeElement;
+                  if (target && target.classList.contains('config-value')) {
+                    const plainText = target.textContent;
+                    target.textContent = plainText;
+                    // Restore cursor to end
+                    const range = document.createRange();
+                    const sel = window.getSelection();
+                    range.selectNodeContents(target);
+                    range.collapse(false);
+                    sel.removeAllRanges();
+                    sel.addRange(range);
+                  }
+                }, 0);
+              }
+              return;
+            }
+            // Let browser handle paste normally for other fields
             return;
           } else if ((e.metaKey || e.ctrlKey) && (e.key === 'x' || e.key === 'X')) {
             // Let browser handle cut normally
@@ -315,6 +348,29 @@
             return;
           }
         });
+
+        // Also handle paste event for config fields (right-click paste, etc)
+        this.display.addEventListener('paste', (e) => {
+          if (e.target.classList.contains('config-value')) {
+            e.preventDefault();
+            const text = e.clipboardData ? e.clipboardData.getData('text/plain') : '';
+            if (text) {
+              document.execCommand('insertText', false, text);
+              // Normalize to plain text after paste
+              setTimeout(() => {
+                const plainText = e.target.textContent;
+                e.target.textContent = plainText;
+                // Restore cursor to end
+                const range = document.createRange();
+                const sel = window.getSelection();
+                range.selectNodeContents(e.target);
+                range.collapse(false);
+                sel.removeAllRanges();
+                sel.addRange(range);
+              }, 0);
+            }
+          }
+        }, true);
 
         document.getElementById('export-btn').addEventListener('click', () => {
           if (this.currentStructure) {
