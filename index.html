@@ -415,16 +415,12 @@
           }
           
           if (lastResponse) {
-            // Show what we're copying
-            const first30 = lastResponse.substring(0, 30);
-            const charCodes = Array.from(first30).map(c => c.charCodeAt(0)).join(',');
-            alert('Copying:\n"' + first30 + '..."\n\nChar codes:\n' + charCodes + '\n\n(Space=32, NBSP=160)');
-            
             // Use old-school copy method that works over HTTP
             const textArea = document.createElement('textarea');
             textArea.value = lastResponse;
             textArea.style.position = 'fixed';
             textArea.style.left = '-999999px';
+            textArea.style.top = '-999999px';
             document.body.appendChild(textArea);
             textArea.select();
             
@@ -489,12 +485,8 @@
               const maskedKey = (this.apiKey && this.apiKey !== 'NULL') ? '•'.repeat(this.apiKey.length) : 'NULL';
               e.target.textContent = maskedKey;
             } else if (id === 'edit-header') {
-              // Read from data attribute if available, otherwise from textContent
+              // Store header exactly as typed
               let headerText = e.target.getAttribute('data-raw-header') || e.target.textContent;
-              // Add zero-width joiner after header to prevent trimming of trailing spaces
-              if (!headerText.endsWith('\u200D') && headerText !== 'NULL') {
-                headerText = headerText + '\u200D';
-              }
               if (headerText === 'NULL') {
                 this.header = null;
               } else {
@@ -516,12 +508,8 @@
             } else if (id === 'edit-key') {
               this.apiKey = e.target.textContent.trim();
             } else if (id === 'edit-header') {
-              // Store raw value and add zero-width joiner to prevent trimming
+              // Store header exactly as typed
               let headerText = e.target.textContent;
-              // Add zero-width joiner after header to prevent trimming of trailing spaces
-              if (!headerText.endsWith('\u200D') && headerText !== 'NULL') {
-                headerText = headerText + '\u200D';
-              }
               e.target.setAttribute('data-raw-header', headerText);
               this.header = headerText;
             } else if (id === 'edit-preference') {
