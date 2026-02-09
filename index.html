@@ -171,6 +171,7 @@
     <button id="polarity-btn">Short Response</button>
     <button id="copy-btn">Copy</button>
     <button id="paste-btn">Paste</button>
+    <button id="send-btn">Send</button>
     <button id="support-btn">Support Us</button>
     <button id="getkey-btn">Get Key</button>
   </div>
@@ -479,6 +480,13 @@
           } catch (err) {
             alert('Failed to paste: ' + err.message);
           }
+        });
+
+        document.getElementById('send-btn').addEventListener('click', async () => {
+          // Simulate pressing Enter
+          const cmd = this.input.textContent.trim();
+          this.input.innerHTML = '';
+          if (cmd) await this.process(cmd);
         });
 
         document.getElementById('support-btn').addEventListener('click', () => {
