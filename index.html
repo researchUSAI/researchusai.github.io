@@ -301,39 +301,13 @@
             this.input.innerHTML = '';
             if (cmd) await this.process(cmd);
           } else if ((e.metaKey || e.ctrlKey) && (e.key === 'c' || e.key === 'C')) {
-            // Let browser handle copy normally in all cases
+            // Let browser handle copy normally
             return;
           } else if ((e.metaKey || e.ctrlKey) && (e.key === 'v' || e.key === 'V')) {
-            // Intercept paste in config fields to strip formatting
-            if (document.activeElement && document.activeElement.classList.contains('config-value')) {
-              e.preventDefault();
-              // Get plain text from clipboard
-              const text = e.clipboardData ? e.clipboardData.getData('text/plain') : '';
-              if (text) {
-                // Insert as plain text without any formatting
-                document.execCommand('insertText', false, text);
-                // Normalize to plain text
-                setTimeout(() => {
-                  const target = document.activeElement;
-                  if (target && target.classList.contains('config-value')) {
-                    const plainText = target.textContent;
-                    target.textContent = plainText;
-                    // Restore cursor to end
-                    const range = document.createRange();
-                    const sel = window.getSelection();
-                    range.selectNodeContents(target);
-                    range.collapse(false);
-                    sel.removeAllRanges();
-                    sel.addRange(range);
-                  }
-                }, 0);
-              }
-              return;
-            }
-            // Let browser handle paste normally for other fields
+            // Let browser handle paste normally
             return;
           } else if ((e.metaKey || e.ctrlKey) && (e.key === 'x' || e.key === 'X')) {
-            // Let browser handle cut normally in all cases
+            // Let browser handle cut normally
             return;
           } else if (['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'].includes(e.key)) {
             return;
@@ -342,28 +316,14 @@
           }
         });
 
-        // Also handle paste event for config fields (right-click paste, etc)
+        // Strip formatting when pasting into config fields
         this.display.addEventListener('paste', (e) => {
           if (e.target.classList.contains('config-value')) {
             e.preventDefault();
-            const text = e.clipboardData ? e.clipboardData.getData('text/plain') : '';
-            if (text) {
-              document.execCommand('insertText', false, text);
-              // Normalize to plain text after paste
-              setTimeout(() => {
-                const plainText = e.target.textContent;
-                e.target.textContent = plainText;
-                // Restore cursor to end
-                const range = document.createRange();
-                const sel = window.getSelection();
-                range.selectNodeContents(e.target);
-                range.collapse(false);
-                sel.removeAllRanges();
-                sel.addRange(range);
-              }, 0);
-            }
+            const text = e.clipboardData.getData('text/plain');
+            document.execCommand('insertText', false, text);
           }
-        }, true);
+        });
 
         document.getElementById('export-btn').addEventListener('click', () => {
           if (this.currentStructure) {
