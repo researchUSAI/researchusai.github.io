@@ -415,6 +415,11 @@
           }
           
           if (lastResponse) {
+            // Show what we're copying
+            const first30 = lastResponse.substring(0, 30);
+            const charCodes = Array.from(first30).map(c => c.charCodeAt(0)).join(',');
+            alert('Copying:\n"' + first30 + '..."\n\nChar codes:\n' + charCodes + '\n\n(Space=32, NBSP=160)');
+            
             // Use old-school copy method that works over HTTP
             const textArea = document.createElement('textarea');
             textArea.value = lastResponse;
@@ -486,8 +491,10 @@
             } else if (id === 'edit-header') {
               // Read from data attribute if available, otherwise from textContent
               let headerText = e.target.getAttribute('data-raw-header') || e.target.textContent;
-              // Replace trailing regular spaces with non-breaking spaces
-              headerText = headerText.replace(/( +)$/, (match) => '\u00A0'.repeat(match.length));
+              // Add zero-width joiner after header to prevent trimming of trailing spaces
+              if (!headerText.endsWith('\u200D') && headerText !== 'NULL') {
+                headerText = headerText + '\u200D';
+              }
               if (headerText === 'NULL') {
                 this.header = null;
               } else {
@@ -509,10 +516,12 @@
             } else if (id === 'edit-key') {
               this.apiKey = e.target.textContent.trim();
             } else if (id === 'edit-header') {
-              // Store raw value and convert trailing spaces to non-breaking spaces
+              // Store raw value and add zero-width joiner to prevent trimming
               let headerText = e.target.textContent;
-              // Replace trailing regular spaces with non-breaking spaces so they won't be trimmed
-              headerText = headerText.replace(/( +)$/, (match) => '\u00A0'.repeat(match.length));
+              // Add zero-width joiner after header to prevent trimming of trailing spaces
+              if (!headerText.endsWith('\u200D') && headerText !== 'NULL') {
+                headerText = headerText + '\u200D';
+              }
               e.target.setAttribute('data-raw-header', headerText);
               this.header = headerText;
             } else if (id === 'edit-preference') {
@@ -613,19 +622,22 @@
           return;
         }
 
-        // Check if cursor is at the very end of input
-        const atEnd = range.endOffset === range.endContainer.length && 
-                      range.endContainer === this.input.lastChild?.firstChild || 
-                      (this.input.childNodes.length === 0);
+        // Get cursor position in text
+        const preCaretRange = range.cloneRange();
+        preCaretRange.selectNodeContents(this.input);
+        preCaretRange.setEnd(range.endContainer, range.endOffset);
+        const caretOffset = preCaretRange.toString().length;
+        const totalLength = this.input.textContent.length;
         
-        if (atEnd) {
+        // Check if at the very end
+        if (caretOffset === totalLength) {
           // At end - ::after will show, hide inline cursor
           this.inlineCursor.style.display = 'none';
           this.input.classList.remove('has-inline-cursor');
           return;
         }
 
-        // Not at end - show inline cursor, hide ::after
+        // Not at end - show inline cursor at exact position, hide ::after
         const rect = range.getBoundingClientRect();
         const containerRect = document.getElementById('display-container').getBoundingClientRect();
         
