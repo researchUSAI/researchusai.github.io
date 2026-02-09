@@ -58,8 +58,8 @@
     #inline-cursor {
       position: absolute;
       background: #BDCEF1;
-      width: 1ch;
-      height: 1em;
+      width: 10px;
+      height: 24px;
       animation: blink 1s step-end infinite;
       pointer-events: none;
       display: none;
@@ -135,6 +135,14 @@
       color: #181818;
     }
     #input .input-reverse {
+      background: #BDCEF1;
+      color: #181818;
+    }
+    #input .input-reverse::selection {
+      background: #181818;
+      color: #BDCEF1;
+    }
+    .config-value::selection {
       background: #BDCEF1;
       color: #181818;
     }
@@ -286,6 +294,12 @@
         });
 
         document.addEventListener('selectionchange', () => {
+          if (document.activeElement === this.input) {
+            this.updateInlineCursor();
+          }
+        });
+
+        window.addEventListener('resize', () => {
           if (document.activeElement === this.input) {
             this.updateInlineCursor();
           }
