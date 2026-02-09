@@ -170,6 +170,7 @@
     <button id="toxic-btn">Normal</button>
     <button id="polarity-btn">Short Response</button>
     <button id="copy-btn">Copy</button>
+    <button id="paste-btn">Paste</button>
     <button id="support-btn">Support Us</button>
     <button id="getkey-btn">Get Key</button>
   </div>
@@ -437,6 +438,46 @@
             }
           } else {
             alert('No response to copy');
+          }
+        });
+
+        document.getElementById('paste-btn').addEventListener('click', async () => {
+          const btn = document.getElementById('paste-btn');
+          
+          // Prevent multiple clicks
+          if (btn.textContent === 'Pasted!') return;
+          
+          try {
+            // Read clipboard as plain text
+            const text = await navigator.clipboard.readText();
+            
+            if (text) {
+              // Clear the input field
+              this.input.innerHTML = '';
+              
+              // Create reverse video span with plain text
+              const span = document.createElement('span');
+              span.className = 'input-reverse';
+              span.textContent = text; // textContent ensures plain text
+              this.input.appendChild(span);
+              
+              // Focus the input and move cursor to end
+              this.input.focus();
+              const range = document.createRange();
+              range.selectNodeContents(this.input);
+              range.collapse(false);
+              const sel = window.getSelection();
+              sel.removeAllRanges();
+              sel.addRange(range);
+              
+              // Show feedback
+              btn.textContent = 'Pasted!';
+              setTimeout(() => {
+                btn.textContent = 'Paste';
+              }, 1000);
+            }
+          } catch (err) {
+            alert('Failed to paste: ' + err.message);
           }
         });
 
