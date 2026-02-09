@@ -316,15 +316,6 @@
           }
         });
 
-        // Strip formatting when pasting into config fields
-        this.display.addEventListener('paste', (e) => {
-          if (e.target.classList.contains('config-value')) {
-            e.preventDefault();
-            const text = e.clipboardData.getData('text/plain');
-            document.execCommand('insertText', false, text);
-          }
-        });
-
         document.getElementById('export-btn').addEventListener('click', () => {
           if (this.currentStructure) {
             this.currentStructure.release(this.header);
@@ -526,6 +517,35 @@
             }
           }
         });
+
+        // === Force plain text only in config fields ===
+        this.display.addEventListener('paste', (e) => {
+          if (e.target.classList.contains('config-value')) {
+            e.preventDefault();
+            const text = (e.clipboardData || window.clipboardData).getData('text/plain');
+            document.execCommand('insertText', false, text);
+          }
+        }, true);
+
+        this.display.addEventListener('input', (e) => {
+          if (e.target.classList.contains('config-value')) {
+            const el = e.target;
+            // If any HTML tags sneaked in → flatten to text
+            if (el.innerHTML !== el.textContent) {
+              const plainText = el.textContent;
+              el.innerHTML = '';
+              el.appendChild(document.createTextNode(plainText));
+              
+              // Move cursor to end
+              const range = document.createRange();
+              range.selectNodeContents(el);
+              range.collapse(false);
+              const sel = window.getSelection();
+              sel.removeAllRanges();
+              sel.addRange(range);
+            }
+          }
+        }, true);
       }
 
       normalizeInput() {
