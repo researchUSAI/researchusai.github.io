@@ -158,13 +158,6 @@
       max-width: 78ch;
       display: inline;
     }
-    .config-value * {
-      color: inherit !important;
-      background: inherit !important;
-      font-family: inherit !important;
-      font-size: inherit !important;
-      line-height: inherit !important;
-    }
     .message-separator {
       height: 1em;
     }
@@ -308,7 +301,7 @@
             this.input.innerHTML = '';
             if (cmd) await this.process(cmd);
           } else if ((e.metaKey || e.ctrlKey) && (e.key === 'c' || e.key === 'C')) {
-            // Let browser handle copy normally
+            // Let browser handle copy normally in all cases
             return;
           } else if ((e.metaKey || e.ctrlKey) && (e.key === 'v' || e.key === 'V')) {
             // Intercept paste in config fields to strip formatting
@@ -340,7 +333,7 @@
             // Let browser handle paste normally for other fields
             return;
           } else if ((e.metaKey || e.ctrlKey) && (e.key === 'x' || e.key === 'X')) {
-            // Let browser handle cut normally
+            // Let browser handle cut normally in all cases
             return;
           } else if (['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'].includes(e.key)) {
             return;
