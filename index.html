@@ -210,10 +210,6 @@
       release(header) {
         this.releaseTime = new Date().toLocaleTimeString();
 
-        console.log('=== EXPORT ===');
-        console.log('Header param:', JSON.stringify(header));
-        console.log('Log entries:', this.log.length);
-
         let text = `${this.date} (${this.day})\n`;
         if (this.releaseTime) text += `Released: ${this.releaseTime}\n`;
         text += '\n';
@@ -223,9 +219,6 @@
           if (entry.type === 'initiation') {
             text += `USER ${time}:\n${entry.probe}\n\n`;
           } else if (entry.type === 'response') {
-            console.log('Response entry:', JSON.stringify(entry.probe.substring(0, 100)));
-            console.log('First 20 chars:', Array.from(entry.probe.substring(0, 20)).map(c => c.charCodeAt(0)));
-            
             // Response already has header built in - use it directly
             text += `LLM ${time}:\n${entry.probe}\n\n`;
           }
@@ -311,42 +304,8 @@
             // Let browser handle copy normally
             return;
           } else if ((e.metaKey || e.ctrlKey) && (e.key === 'v' || e.key === 'V')) {
-            // Normalize paste in config fields - strip HTML and paste plain text
-            if (document.activeElement && document.activeElement.classList.contains('config-value')) {
-              e.preventDefault();
-              navigator.clipboard.readText().then(text => {
-                document.execCommand('insertText', false, text);
-              }).catch(() => {});
-              return;
-            }
-            
-            // Allow paste in input field with reverse video styling
-            if (document.activeElement === this.input) {
-              e.preventDefault();
-              navigator.clipboard.readText().then(text => {
-                const selection = window.getSelection();
-                const span = document.createElement('span');
-                span.className = 'input-reverse';
-                span.textContent = text;
-                if (selection.rangeCount > 0) {
-                  const range = selection.getRangeAt(0);
-                  range.deleteContents();
-                  range.insertNode(span);
-                } else {
-                  this.input.appendChild(span);
-                }
-                const range = document.createRange();
-                range.setStartAfter(span);
-                range.collapse(true);
-                selection.removeAllRanges();
-                selection.addRange(range);
-                this.scrollToBottom();
-              }).catch(() => {});
-              return;
-            }
-            
-            // Block paste everywhere else (display area, empty space)
-            e.preventDefault();
+            // Let browser handle paste normally
+            return;
           } else if ((e.metaKey || e.ctrlKey) && (e.key === 'x' || e.key === 'X')) {
             // Let browser handle cut normally
             return;
@@ -446,40 +405,36 @@
           // Prevent multiple clicks
           if (btn.textContent === 'Copied!') return;
           
-          console.log('=== COPY BUTTON CLICKED ===');
-          console.log('Stack length:', this.stack.length);
-          console.log('Stack contents:', this.stack.map(s => s.substring(0, 50)));
-          
           // Find the most recent LLM response in the stack
           let lastResponse = '';
           for (let i = this.stack.length - 1; i >= 0; i--) {
-            console.log('Checking stack[' + i + ']:', this.stack[i].substring(0, 20));
             if (this.stack[i].startsWith('llm:\n')) {
               lastResponse = this.stack[i].slice('llm:\n'.length);
-              console.log('Found LLM response at index', i);
               break;
             }
           }
           
           if (lastResponse) {
-            console.log('=== COPY BUTTON ===');
-            console.log('Last response:', JSON.stringify(lastResponse.substring(0, 100)));
-            console.log('Length:', lastResponse.length);
-            console.log('First 20 char codes:', Array.from(lastResponse.substring(0, 20)).map(c => c.charCodeAt(0)));
+            // Use old-school copy method that works over HTTP
+            const textArea = document.createElement('textarea');
+            textArea.value = lastResponse;
+            textArea.style.position = 'fixed';
+            textArea.style.left = '-999999px';
+            document.body.appendChild(textArea);
+            textArea.select();
             
-            // Response already has header built in - use it directly
-            const textToCopy = lastResponse;
-            
-            navigator.clipboard.writeText(textToCopy).then(() => {
+            try {
+              document.execCommand('copy');
+              document.body.removeChild(textArea);
               btn.textContent = 'Copied!';
               setTimeout(() => {
                 btn.textContent = 'Copy';
               }, 1000);
-            }).catch((err) => {
-              alert('Failed to copy to clipboard: ' + err.message);
-            });
+            } catch (err) {
+              document.body.removeChild(textArea);
+              alert('Failed to copy: ' + err.message);
+            }
           } else {
-            console.log('NO RESPONSE FOUND IN STACK');
             alert('No response to copy');
           }
         });
@@ -556,25 +511,10 @@
             } else if (id === 'edit-header') {
               // Store raw value and convert trailing spaces to non-breaking spaces
               let headerText = e.target.textContent;
-              
-              console.log('=== HEADER INPUT EVENT ===');
-              console.log('Raw textContent:', JSON.stringify(headerText));
-              console.log('Length:', headerText.length);
-              console.log('Char codes:', Array.from(headerText).map(c => c.charCodeAt(0)));
-              
               // Replace trailing regular spaces with non-breaking spaces so they won't be trimmed
-              headerText = headerText.replace(/( +)$/, (match) => {
-                console.log('Found trailing spaces:', match.length);
-                return '\u00A0'.repeat(match.length);
-              });
-              
-              console.log('After conversion:', JSON.stringify(headerText));
-              console.log('After char codes:', Array.from(headerText).map(c => c.charCodeAt(0)));
-              
+              headerText = headerText.replace(/( +)$/, (match) => '\u00A0'.repeat(match.length));
               e.target.setAttribute('data-raw-header', headerText);
               this.header = headerText;
-              
-              console.log('Stored in this.header:', JSON.stringify(this.header));
             } else if (id === 'edit-preference') {
               this.preference = e.target.textContent.trim();
             }
@@ -767,17 +707,8 @@
             const chunk = new TextDecoder().decode(value);
             
             if (!hasAddedHeader) {
-              // DEBUG: Log exactly what's in this.header
-              console.log('=== STREAMING FIRST CHUNK ===');
-              console.log('this.header value:', JSON.stringify(this.header));
-              console.log('this.header length:', this.header ? this.header.length : 0);
-              console.log('this.header char codes:', this.header ? Array.from(this.header).map(c => c.charCodeAt(0)) : []);
-              console.log('First chunk:', JSON.stringify(chunk.substring(0, 50)));
-              
               // First chunk - prepend header once
               const firstContent = this.header ? this.header + chunk : chunk;
-              console.log('Built firstContent:', JSON.stringify(firstContent.substring(0, 100)));
-              
               this.stack.push(`llm:\n${firstContent}`);
               hasAddedHeader = true;
             } else {
@@ -790,9 +721,6 @@
 
           // Extract complete response (with header) from stack
           const completeResponse = this.stack[this.stack.length - 1].slice('llm:\n'.length);
-          console.log('=== STREAMING DONE ===');
-          console.log('Complete response start:', JSON.stringify(completeResponse.substring(0, 100)));
-          
           this.currentStructure.addResponse(completeResponse);
 
           return completeResponse;
