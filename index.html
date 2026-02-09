@@ -457,9 +457,11 @@
               setTimeout(() => {
                 btn.textContent = 'Copy';
               }, 1000);
-            }).catch(() => {
-              alert('Failed to copy to clipboard');
+            }).catch((err) => {
+              alert('Failed to copy to clipboard: ' + err.message);
             });
+          } else {
+            alert('No response to copy');
           }
         });
 
@@ -508,8 +510,10 @@
               const maskedKey = (this.apiKey && this.apiKey !== 'NULL') ? '•'.repeat(this.apiKey.length) : 'NULL';
               e.target.textContent = maskedKey;
             } else if (id === 'edit-header') {
-              // Read from data attribute if available to preserve trailing spaces
+              // Read from data attribute if available, otherwise from textContent
               let headerText = e.target.getAttribute('data-raw-header') || e.target.textContent;
+              // Replace trailing regular spaces with non-breaking spaces
+              headerText = headerText.replace(/( +)$/, (match) => '\u00A0'.repeat(match.length));
               if (headerText === 'NULL') {
                 this.header = null;
               } else {
@@ -530,9 +534,11 @@
               this.model = e.target.textContent.trim();
             } else if (id === 'edit-key') {
               this.apiKey = e.target.textContent.trim();
-            } else if (id == 'edit-header') {
-              // Store raw value in data attribute to preserve trailing spaces
-              const headerText = e.target.textContent;
+            } else if (id === 'edit-header') {
+              // Store raw value and convert trailing spaces to non-breaking spaces
+              let headerText = e.target.textContent;
+              // Replace trailing regular spaces with non-breaking spaces so they won't be trimmed
+              headerText = headerText.replace(/( +)$/, (match) => '\u00A0'.repeat(match.length));
               e.target.setAttribute('data-raw-header', headerText);
               this.header = headerText;
             } else if (id === 'edit-preference') {
