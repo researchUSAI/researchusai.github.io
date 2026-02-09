@@ -58,8 +58,8 @@
     #inline-cursor {
       position: absolute;
       background: #BDCEF1;
-      width: 0.6em;
-      height: 1.5em;
+      width: 1ch;
+      height: 1em;
       animation: blink 1s step-end infinite;
       pointer-events: none;
       display: none;
@@ -138,10 +138,6 @@
       background: #BDCEF1;
       color: #181818;
     }
-    .config-value::selection {
-      background: #BDCEF1;
-      color: #181818;
-    }
     #measure {
       position: absolute;
       visibility: hidden;
@@ -161,9 +157,6 @@
       word-wrap: break-word;
       max-width: 78ch;
       display: inline;
-      font-size: inherit;
-      font-family: inherit;
-      line-height: inherit;
     }
     .message-separator {
       height: 1em;
@@ -293,12 +286,6 @@
         });
 
         document.addEventListener('selectionchange', () => {
-          if (document.activeElement === this.input) {
-            this.updateInlineCursor();
-          }
-        });
-
-        window.addEventListener('resize', () => {
           if (document.activeElement === this.input) {
             this.updateInlineCursor();
           }
@@ -642,15 +629,10 @@
         const rect = range.getBoundingClientRect();
         const containerRect = document.getElementById('display-container').getBoundingClientRect();
         
-        // Get computed font size of input to size cursor correctly
-        const computedStyle = window.getComputedStyle(this.input);
-        const fontSize = computedStyle.fontSize;
-        
         this.inlineCursor.style.display = 'block';
         this.input.classList.add('has-inline-cursor');
         this.inlineCursor.style.left = `${rect.left - containerRect.left}px`;
         this.inlineCursor.style.top = `${rect.top - containerRect.top}px`;
-        this.inlineCursor.style.fontSize = fontSize;
       }
 
       formatStructures() {
