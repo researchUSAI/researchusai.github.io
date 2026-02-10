@@ -260,6 +260,7 @@
   <div id="toolbar">
     <div id="toolbar-row-1">
       <button id="getkey-btn">Get Key</button>
+      <button id="pastekey-btn">Paste Key</button>
       <button id="support-btn">Support Us</button>
       <button id="export-btn">Export</button>
       <button id="polarity-btn">Short Form</button>
@@ -653,6 +654,39 @@
           window.open('https://console.x.ai/team/4e4cc61f-c596-41c2-91ab-78a1258ac206', '_blank');
         });
 
+        document.getElementById('pastekey-btn').addEventListener('click', async () => {
+          const btn = document.getElementById('pastekey-btn');
+          
+          // Prevent multiple clicks
+          if (btn.textContent === 'Pasted!') return;
+          
+          try {
+            const text = await navigator.clipboard.readText();
+            if (text) {
+              const trimmedKey = text.trim();
+              if (trimmedKey) {
+                // Save the key directly
+                this.apiKey = trimmedKey;
+                localStorage.setItem('apiKey', this.apiKey);
+                
+                // Update the key field in the DOM
+                const keyEl = document.getElementById('edit-key');
+                if (keyEl) {
+                  keyEl.textContent = '•'.repeat(trimmedKey.length);
+                  keyEl.setAttribute('data-actual-key', trimmedKey);
+                }
+                
+                btn.textContent = 'Pasted!';
+                setTimeout(() => {
+                  btn.textContent = 'Paste Key';
+                }, 1000);
+              }
+            }
+          } catch (err) {
+            alert('Paste failed. Please copy your API key first, then try again.');
+          }
+        });
+
         this.display.addEventListener('focus', (e) => {
           if (e.target.id === 'edit-key') {
             this.keyFieldBeingEdited = true;
@@ -669,6 +703,9 @@
                 sel.removeAllRanges();
                 sel.addRange(range);
               }
+            } else if (keyText === 'NULL') {
+              // Clear NULL when clicking to edit
+              e.target.textContent = '';
             }
           }
         }, true);
@@ -1013,12 +1050,21 @@
         const headerEl = document.getElementById('edit-header');
         const preferenceEl = document.getElementById('edit-preference');
         
+        // Preserve current values from DOM if they exist
+        let currentEndpoint = this.modelEndpoint;
+        let currentModel = this.model;
+        let currentKeyDisplay = '';
+        let currentHeader = this.header;
+        let currentPreference = this.preference;
+        
         if (endpointEl && endpointEl.textContent.trim() !== 'NULL') {
-          this.modelEndpoint = endpointEl.textContent.trim();
+          currentEndpoint = endpointEl.textContent.trim();
+          this.modelEndpoint = currentEndpoint;
           localStorage.setItem('modelEndpoint', this.modelEndpoint);
         }
         if (modelEl && modelEl.textContent.trim() !== 'NULL') {
-          this.model = modelEl.textContent.trim();
+          currentModel = modelEl.textContent.trim();
+          this.model = currentModel;
           localStorage.setItem('model', this.model);
         }
         if (keyEl && !this.keyFieldBeingEdited) {
@@ -1026,17 +1072,29 @@
           // Only update apiKey if it's NOT bullets (meaning user edited it)
           if (!keyText.match(/^•+$/) && keyText !== 'NULL' && keyText !== '') {
             this.apiKey = keyText;
-            localStorage.setItem('apiKey', this.apiKey); // Now saves for user convenience
+            localStorage.setItem('apiKey', this.apiKey);
           }
-          // If it's bullets or NULL, keep the existing this.apiKey value
+          // Show masked key or NULL
+          currentKeyDisplay = (this.apiKey && this.apiKey !== 'NULL' && this.apiKey !== '') ? '•'.repeat(this.apiKey.length) : 'NULL';
+        } else if (keyEl) {
+          // Keep whatever is currently displayed while editing
+          currentKeyDisplay = keyEl.textContent;
+        } else {
+          // First render
+          currentKeyDisplay = (this.apiKey && this.apiKey !== 'NULL' && this.apiKey !== '') ? '•'.repeat(this.apiKey.length) : 'NULL';
         }
+        
         if (headerEl) {
           const headerText = headerEl.textContent;
-          this.header = (headerText !== 'NULL' && headerText !== '') ? headerText : '';
-          localStorage.setItem('header', this.header);
+          if (headerText !== 'NULL' && headerText !== '') {
+            currentHeader = headerText;
+            this.header = currentHeader;
+            localStorage.setItem('header', this.header);
+          }
         }
         if (preferenceEl && preferenceEl.textContent.trim() !== 'NULL') {
-          this.preference = preferenceEl.textContent.trim();
+          currentPreference = preferenceEl.textContent.trim();
+          this.preference = currentPreference;
           localStorage.setItem('preference', this.preference);
         }
 
@@ -1044,13 +1102,13 @@
         const structures = this.formatStructures();
         let blockInput = false;
 
-        output += '<span class="reverse-video">endpoint:</span> <span id="edit-endpoint" class="config-value" contenteditable="true">' + (this.modelEndpoint || 'https://api.x.ai') + '</span>\n';
-        output += '<span class="reverse-video">model:</span> <span id="edit-model" class="config-value" contenteditable="true">' + (this.model || 'grok-3') + '</span>\n';
-        output += '<span class="reverse-video">key:</span> <span id="edit-key" class="config-value" contenteditable="true" data-actual-key="' + (this.apiKey || '') + '">NULL</span>\n';
-        const headerDisplay = this.header || 'NULL';
-        const headerAttr = (this.header || '').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+        output += '<span class="reverse-video">endpoint:</span> <span id="edit-endpoint" class="config-value" contenteditable="true">' + (currentEndpoint || 'https://api.x.ai') + '</span>\n';
+        output += '<span class="reverse-video">model:</span> <span id="edit-model" class="config-value" contenteditable="true">' + (currentModel || 'grok-3') + '</span>\n';
+        output += '<span class="reverse-video">key:</span> <span id="edit-key" class="config-value" contenteditable="true" data-actual-key="' + (this.apiKey || '') + '">' + currentKeyDisplay + '</span>\n';
+        const headerDisplay = currentHeader || 'NULL';
+        const headerAttr = (currentHeader || '').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
         output += '<span class="reverse-video">header:</span> <span id="edit-header" class="config-value" contenteditable="true" data-raw-header="' + headerAttr + '">' + headerDisplay + '</span>\n';
-        output += '<span class="reverse-video">preference:</span> <span id="edit-preference" class="config-value" contenteditable="true">' + (this.preference || 'NULL') + '</span>\n';
+        output += '<span class="reverse-video">preference:</span> <span id="edit-preference" class="config-value" contenteditable="true">' + (currentPreference || 'NULL') + '</span>\n';
         output += '<div class="message-separator"></div>';
 
         switch(this.state) {
