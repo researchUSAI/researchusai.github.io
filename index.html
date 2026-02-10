@@ -97,7 +97,7 @@
       51%, 100% { opacity: 0; }
     }
     #toolbar {
-      flex: 0 0 auto;
+      flex: 0 0 30vh;
       padding: 0.75em 1ch;
       background: #222;
       border-bottom: 2px solid #BDCEF1;
@@ -105,7 +105,6 @@
       flex-direction: column;
       gap: 0.75em;
       box-shadow: 0 2px 15px rgba(189, 206, 241, 0.3);
-      max-height: 40vh;
       overflow-y: auto;
       overflow-x: hidden;
     }
@@ -271,9 +270,9 @@
 <body>
   <div id="toolbar">
     <div id="toolbar-row-1">
+      <button id="support-btn">Support Us</button>
       <button id="getkey-btn">Get Key</button>
       <button id="pastekey-btn">Paste Key</button>
-      <button id="support-btn">Support Us</button>
       <button id="export-btn">Export</button>
       <button id="polarity-btn">Short Form</button>
       <button id="sentence-btn">OFF</button>
