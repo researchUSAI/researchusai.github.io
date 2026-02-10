@@ -415,6 +415,15 @@
           this.inlineCursor.style.display = 'none';
         });
 
+        this.input.addEventListener('paste', (e) => {
+          e.preventDefault();
+          const text = (e.clipboardData || window.clipboardData).getData('text/plain');
+          if (text) {
+            // Use execCommand to insert text - this triggers input event which calls normalizeInput
+            document.execCommand('insertText', false, text);
+          }
+        });
+
         document.addEventListener('selectionchange', () => {
           if (document.activeElement === this.input) {
             this.updateInlineCursor();
