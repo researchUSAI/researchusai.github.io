@@ -74,8 +74,6 @@
       text-shadow: 
         0 0 5px rgba(189, 206, 241, 0.8),
         0 0 10px rgba(189, 206, 241, 0.5);
-      display: inline;
-      vertical-align: baseline;
     }
     /* Hide ::after when inline cursor is active */
     #input.has-inline-cursor::after {
@@ -417,19 +415,6 @@
           this.inlineCursor.style.display = 'none';
         });
 
-        this.input.addEventListener('paste', (e) => {
-          e.preventDefault();
-          const text = (e.clipboardData || window.clipboardData).getData('text/plain');
-          if (text) {
-            // Clear input and wrap text in reverse video
-            this.input.innerHTML = '';
-            const span = document.createElement('span');
-            span.className = 'input-reverse';
-            span.textContent = text;
-            this.input.appendChild(span);
-          }
-        });
-
         document.addEventListener('selectionchange', () => {
           if (document.activeElement === this.input) {
             this.updateInlineCursor();
@@ -577,7 +562,8 @@
 
         document.getElementById('clear-btn').addEventListener('click', () => {
           const btn = document.getElementById('clear-btn');
-          this.input.textContent = '';
+          this.input.innerHTML = '';
+          this.input.focus();
           btn.textContent = 'Cleared!';
           setTimeout(() => {
             btn.textContent = 'Clear';
@@ -593,12 +579,9 @@
           try {
             const text = await navigator.clipboard.readText();
             if (text) {
-              // Clear input and wrap text in reverse video
-              this.input.innerHTML = '';
-              const span = document.createElement('span');
-              span.className = 'input-reverse';
-              span.textContent = text;
-              this.input.appendChild(span);
+              // Focus input and use execCommand to paste - triggers normalizeInput naturally
+              this.input.focus();
+              document.execCommand('insertText', false, text);
               
               btn.textContent = 'Pasted!';
               setTimeout(() => {
@@ -962,10 +945,16 @@
         const rect = range.getBoundingClientRect();
         const containerRect = document.getElementById('display-container').getBoundingClientRect();
         
+        // Adjust vertical position - move cursor down slightly to align with text baseline
+        const computedStyle = getComputedStyle(this.input);
+        const fontSize = parseFloat(computedStyle.fontSize);
+        const lineHeight = parseFloat(computedStyle.lineHeight);
+        const adjustment = (lineHeight - fontSize) / 4;
+        
         this.inlineCursor.style.display = 'block';
         this.input.classList.add('has-inline-cursor');
         this.inlineCursor.style.left = `${rect.left - containerRect.left}px`;
-        this.inlineCursor.style.top = `${rect.top - containerRect.top}px`;
+        this.inlineCursor.style.top = `${rect.top - containerRect.top + adjustment}px`;
       }
 
       formatStructures() {
