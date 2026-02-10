@@ -184,6 +184,8 @@
       padding: 1em 1ch 3em 1ch;
       white-space: pre-wrap;
       word-wrap: break-word;
+      font-size: 1.1em;
+      line-height: 1.6;
     }
     #input {
       flex: 0 0 auto;
@@ -192,7 +194,7 @@
       background: transparent;
       color: inherit;
       font-family: inherit;
-      font-size: inherit;
+      font-size: 1.1em;
       padding: 0 1ch;
       caret-color: transparent;
       max-height: 10em;
@@ -233,7 +235,7 @@
       cursor: text;
       white-space: pre-wrap;
       word-wrap: break-word;
-      max-width: 78ch;
+      max-width: 50ch;
       display: inline;
       border: 1px solid rgba(189, 206, 241, 0.3);
       box-shadow: 
@@ -417,7 +419,7 @@
         document.addEventListener('keydown', async (e) => {
           if (e.key === 'Enter' && e.shiftKey) {
             e.preventDefault();
-            document.execCommand('insertText', false, ' '.repeat(80));
+            document.execCommand('insertText', false, ' '.repeat(50));
           } else if (e.key === 'Enter' && !e.shiftKey) {
             e.preventDefault();
             const cmd = this.input.textContent.trim();
@@ -881,7 +883,7 @@
         const measuredWidth = this.measure.offsetWidth;
         const pixelsPerChar = measuredWidth / 1;
         const targetWidth = window.innerWidth;
-        const newFontSize = (targetWidth / 80) * (100 / pixelsPerChar);
+        const newFontSize = (targetWidth / 50) * (100 / pixelsPerChar);
         const newLineHeight = window.innerHeight / 24;
         document.body.style.fontSize = `${newFontSize}px`;
         document.body.style.lineHeight = `${newLineHeight}px`;
