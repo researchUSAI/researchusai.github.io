@@ -268,6 +268,7 @@
       <button id="emoji-btn">Emojis: NO</button>
       <button id="toxic-btn">Positive</button>
       <button id="back-btn">Back</button>
+      <button id="clear-btn">Clear</button>
       <button id="paste-btn">Paste</button>
     </div>
     <div id="toolbar-row-2">
@@ -432,8 +433,13 @@
         });
 
         document.getElementById('export-btn').addEventListener('click', () => {
+          const btn = document.getElementById('export-btn');
           if (this.currentStructure) {
             this.currentStructure.release(this.header);
+            btn.textContent = 'Exported!';
+            setTimeout(() => {
+              btn.textContent = 'Export';
+            }, 1000);
           }
         });
 
@@ -538,6 +544,64 @@
           this.emojis = !this.emojis;
           this.updateEmojiButton();
           localStorage.setItem('emojis', this.emojis.toString());
+        });
+
+        document.getElementById('clear-btn').addEventListener('click', () => {
+          const btn = document.getElementById('clear-btn');
+          this.input.textContent = '';
+          this.input.focus();
+          btn.textContent = 'Cleared!';
+          setTimeout(() => {
+            btn.textContent = 'Clear';
+          }, 1000);
+        });
+
+        document.getElementById('paste-btn').addEventListener('click', async () => {
+          const btn = document.getElementById('paste-btn');
+          
+          // Prevent multiple clicks
+          if (btn.textContent === 'Pasted!') return;
+          
+          try {
+            const text = await navigator.clipboard.readText();
+            if (text) {
+              // Insert at cursor position or append to end
+              const selection = window.getSelection();
+              if (selection.rangeCount > 0 && this.input.contains(selection.anchorNode)) {
+                const range = selection.getRangeAt(0);
+                range.deleteContents();
+                range.insertNode(document.createTextNode(text));
+                // Move cursor to end of inserted text
+                range.collapse(false);
+                selection.removeAllRanges();
+                selection.addRange(range);
+              } else {
+                this.input.textContent += text;
+              }
+              this.input.focus();
+              
+              btn.textContent = 'Pasted!';
+              setTimeout(() => {
+                btn.textContent = 'Paste';
+              }, 1000);
+            }
+          } catch (err) {
+            // Fallback for browsers that don't support clipboard API or if permission denied
+            alert('Paste failed. Try using Ctrl+V / Cmd+V instead.');
+          }
+        });
+
+        document.getElementById('send-btn').addEventListener('click', async () => {
+          const btn = document.getElementById('send-btn');
+          const content = this.input.textContent.trim();
+          if (content) {
+            this.input.innerHTML = '';
+            btn.textContent = 'Sent!';
+            setTimeout(() => {
+              btn.textContent = 'Send';
+            }, 1000);
+            await this.process(content);
+          }
         });
 
         document.getElementById('copy-btn').addEventListener('click', () => {
