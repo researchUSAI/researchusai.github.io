@@ -19,7 +19,10 @@
       font-size: 16px;
       line-height: 24px;
       overflow: hidden;
-      text-shadow: 0 0 5px rgba(189, 206, 241, 0.5);
+      text-shadow: 
+        0 0 5px rgba(189, 206, 241, 0.8),
+        0 0 10px rgba(189, 206, 241, 0.5),
+        0 0 15px rgba(189, 206, 241, 0.3);
       position: relative;
     }
     /* Scanline overlay */
@@ -44,11 +47,33 @@
       0% { transform: translateY(0); }
       100% { transform: translateY(4px); }
     }
+    @keyframes glow-pulse {
+      0%, 100% { 
+        box-shadow: 
+          0 0 5px rgba(189, 206, 241, 0.4),
+          0 0 10px rgba(189, 206, 241, 0.3),
+          inset 0 0 5px rgba(189, 206, 241, 0.2);
+      }
+      50% { 
+        box-shadow: 
+          0 0 10px rgba(189, 206, 241, 0.6),
+          0 0 20px rgba(189, 206, 241, 0.5),
+          0 0 30px rgba(189, 206, 241, 0.3),
+          inset 0 0 10px rgba(189, 206, 241, 0.3);
+      }
+    }
+    @keyframes border-glow {
+      0%, 100% { border-color: #BDCEF1; }
+      50% { border-color: #D4E3FF; }
+    }
     /* Blinking cursor */
     #input::after {
       content: '█';
       animation: blink 1s step-end infinite;
       color: #BDCEF1;
+      text-shadow: 
+        0 0 5px rgba(189, 206, 241, 0.8),
+        0 0 10px rgba(189, 206, 241, 0.5);
     }
     /* Hide ::after when inline cursor is active */
     #input.has-inline-cursor::after {
@@ -63,6 +88,9 @@
       animation: blink 1s step-end infinite;
       pointer-events: none;
       display: none;
+      box-shadow: 
+        0 0 8px rgba(189, 206, 241, 0.8),
+        0 0 15px rgba(189, 206, 241, 0.5);
     }
     @keyframes blink {
       0%, 50% { opacity: 1; }
@@ -72,46 +100,65 @@
       flex: 0 0 auto;
       padding: 0.5em 1ch;
       background: #222;
-      border-bottom: 1px solid #333;
+      border-bottom: 2px solid #BDCEF1;
       display: flex;
-      gap: 1em;
-      align-items: center;
-      flex-wrap: wrap;
+      flex-direction: column;
+      gap: 0.5em;
+      box-shadow: 0 2px 15px rgba(189, 206, 241, 0.3);
     }
-    @media (max-width: 768px) {
-      #toolbar {
-        gap: 0.5em;
-        padding: 0.5em 0.5ch;
-      }
-      #toolbar button {
-        padding: 0.35em 0.6em;
-        font-size: 0.8em;
-        min-width: 70px;
-      }
+    #toolbar-row-1,
+    #toolbar-row-2 {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5em;
+      align-items: stretch;
+      width: 100%;
     }
     #toolbar button {
-      background: #333;
+      background: linear-gradient(145deg, #2a2a2a, #3a3a3a);
       color: #BDCEF1;
-      border: 1px solid #555;
-      padding: 0.4em 0.8em;
+      border: 2px solid #BDCEF1;
+      padding: 0.5em 0.6em;
       font-family: inherit;
-      font-size: 0.85em;
+      font-size: 0.75em;
+      font-weight: bold;
       cursor: pointer;
-      min-width: 80px;
+      width: 100%;
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
+      text-shadow: 
+        0 0 5px rgba(189, 206, 241, 0.8),
+        0 0 10px rgba(189, 206, 241, 0.4);
+      box-shadow: 
+        0 0 8px rgba(189, 206, 241, 0.3),
+        inset 0 0 5px rgba(189, 206, 241, 0.1);
+      transition: all 0.2s;
+      animation: border-glow 2s infinite;
     }
     #toolbar button:hover {
-      background: #444;
+      background: linear-gradient(145deg, #3a3a3a, #4a4a4a);
+      box-shadow: 
+        0 0 15px rgba(189, 206, 241, 0.5),
+        0 0 25px rgba(189, 206, 241, 0.3),
+        inset 0 0 8px rgba(189, 206, 241, 0.2);
+      transform: translateY(-1px);
     }
     #toolbar button:active {
-      background: #555;
+      background: linear-gradient(145deg, #4a4a4a, #5a5a5a);
+      box-shadow: 
+        0 0 20px rgba(189, 206, 241, 0.6),
+        inset 0 0 12px rgba(189, 206, 241, 0.3);
+      transform: translateY(0);
     }
     #polarity-btn {
-      background: #BDCEF1;
+      background: linear-gradient(145deg, #BDCEF1, #D4E3FF);
       color: #181818;
       font-weight: bold;
+      animation: glow-pulse 2s infinite;
+    }
+    #toxic-btn {
+      background: linear-gradient(145deg, #3a3a3a, #4a4a4a);
     }
     #display-container {
       flex: 1 1 auto;
@@ -119,6 +166,11 @@
       flex-direction: column;
       overflow: hidden;
       position: relative;
+      border: 2px solid rgba(189, 206, 241, 0.3);
+      border-top: none;
+      box-shadow: 
+        inset 0 0 25px rgba(189, 206, 241, 0.1),
+        0 0 15px rgba(189, 206, 241, 0.15);
     }
     #display {
       flex: 1 1 auto;
@@ -149,6 +201,10 @@
     #input .input-reverse {
       background: #BDCEF1;
       color: #181818;
+      padding: 0 0.2ch;
+      box-shadow: 
+        0 0 8px rgba(189, 206, 241, 0.8),
+        0 0 15px rgba(189, 206, 241, 0.5);
     }
     #measure {
       position: absolute;
@@ -159,6 +215,10 @@
     .reverse-video {
       background: #BDCEF1;
       color: #181818;
+      padding: 0 0.2ch;
+      box-shadow: 
+        0 0 8px rgba(189, 206, 241, 0.8),
+        0 0 15px rgba(189, 206, 241, 0.5);
     }
     .config-value {
       color: #BDCEF1;
@@ -169,23 +229,51 @@
       word-wrap: break-word;
       max-width: 78ch;
       display: inline;
+      border: 1px solid rgba(189, 206, 241, 0.3);
+      box-shadow: 
+        0 0 5px rgba(189, 206, 241, 0.2),
+        inset 0 0 5px rgba(189, 206, 241, 0.1);
     }
     .message-separator {
       height: 1em;
+    }
+    /* Scrollbar styling */
+    ::-webkit-scrollbar {
+      width: 12px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #181818;
+      border: 1px solid rgba(189, 206, 241, 0.2);
+    }
+    ::-webkit-scrollbar-thumb {
+      background: linear-gradient(145deg, #3a3a3a, #BDCEF1);
+      border: 1px solid #BDCEF1;
+      box-shadow: 0 0 8px rgba(189, 206, 241, 0.4);
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #BDCEF1;
+      box-shadow: 0 0 15px rgba(189, 206, 241, 0.7);
     }
   </style>
 </head>
 <body>
   <div id="toolbar">
-    <button id="export-btn">Export</button>
-    <button id="back-btn">Back</button>
-    <button id="toxic-btn">Normal</button>
-    <button id="polarity-btn">Short Response</button>
-    <button id="copy-btn">Copy</button>
-    <button id="paste-btn">Paste</button>
-    <button id="send-btn">Send</button>
-    <button id="support-btn">Support Us</button>
-    <button id="getkey-btn">Get Key</button>
+    <div id="toolbar-row-1">
+      <button id="getkey-btn">Get Key</button>
+      <button id="support-btn">Support Us</button>
+      <button id="export-btn">Export</button>
+      <button id="polarity-btn">Short Form</button>
+      <button id="sentence-btn">OFF</button>
+      <button id="cta-btn">Call to Action: NO</button>
+      <button id="emoji-btn">Emojis: NO</button>
+      <button id="toxic-btn">Positive</button>
+      <button id="back-btn">Back</button>
+      <button id="paste-btn">Paste</button>
+    </div>
+    <div id="toolbar-row-2">
+      <button id="send-btn">Send</button>
+      <button id="copy-btn">Copy</button>
+    </div>
   </div>
   <div id="display-container">
     <div id="display"></div>
@@ -255,13 +343,19 @@
         this.currentStructure = new Structure();
         this.stack = [];
         this.localBackend = 'https://researchnexus.onrender.com';
-        this.modelEndpoint = 'https://api.x.ai';
-        this.model = 'grok-3';
-        this.apiKey = '';
-        this.header = '';
-        this.preference = '';
-        this.truth = true;
-        this.toxic = false;
+        
+        // Load from localStorage (browser cache)
+        this.modelEndpoint = localStorage.getItem('modelEndpoint') || 'https://api.x.ai';
+        this.model = localStorage.getItem('model') || 'grok-3';
+        this.apiKey = localStorage.getItem('apiKey') || ''; // Now persists for user convenience
+        this.header = localStorage.getItem('header') || '';
+        this.preference = localStorage.getItem('preference') || '';
+        this.truth = localStorage.getItem('truth') === 'false' ? false : true;
+        this.toxic = localStorage.getItem('toxic') || 'positive'; // New: positive, toxic, formal, humorous
+        this.sentenceCount = localStorage.getItem('sentenceCount') || 'off'; // New: off, 1, 2, 3
+        this.callToAction = localStorage.getItem('callToAction') === 'true'; // New: true/false
+        this.emojis = localStorage.getItem('emojis') === 'true'; // New: true/false
+        
         this.dotCount = 0;
         this.dotInterval = null;
         this.display = document.getElementById('display');
@@ -274,6 +368,13 @@
         this.keyFieldBeingEdited = false;
         this.setupEvents();
         this.updateDimensions();
+        
+        // Update button text based on loaded state
+        this.updateToxicButton();
+        this.updatePolarityButton();
+        this.updateSentenceButton();
+        this.updateCTAButton();
+        this.updateEmojiButton();
       }
 
       setupEvents() {
@@ -327,15 +428,6 @@
             return;
           } else {
             return;
-          }
-        });
-
-        // Strip formatting when pasting into config fields
-        this.display.addEventListener('paste', (e) => {
-          if (e.target.classList.contains('config-value')) {
-            e.preventDefault();
-            const text = e.clipboardData.getData('text/plain');
-            document.execCommand('insertText', false, text);
           }
         });
 
@@ -412,14 +504,40 @@
         });
 
         document.getElementById('toxic-btn').addEventListener('click', () => {
-          this.toxic = !this.toxic;
-          document.getElementById('toxic-btn').textContent = this.toxic ? 'Toxic' : 'Normal';
+          // Cycle through: positive -> toxic -> formal -> humorous -> positive
+          const modes = ['positive', 'toxic', 'formal', 'humorous'];
+          const currentIndex = modes.indexOf(this.toxic);
+          this.toxic = modes[(currentIndex + 1) % modes.length];
+          this.updateToxicButton();
+          localStorage.setItem('toxic', this.toxic);
         });
 
         document.getElementById('polarity-btn').addEventListener('click', () => {
           this.truth = !this.truth;
-          document.getElementById('polarity-btn').textContent = this.truth ? 'Short Response' : 'Long Response';
+          this.updatePolarityButton();
+          localStorage.setItem('truth', this.truth.toString());
           this.render();
+        });
+
+        document.getElementById('sentence-btn').addEventListener('click', () => {
+          // Cycle through: off -> 1 -> 2 -> 3 -> off
+          const counts = ['off', '1', '2', '3'];
+          const currentIndex = counts.indexOf(this.sentenceCount);
+          this.sentenceCount = counts[(currentIndex + 1) % counts.length];
+          this.updateSentenceButton();
+          localStorage.setItem('sentenceCount', this.sentenceCount);
+        });
+
+        document.getElementById('cta-btn').addEventListener('click', () => {
+          this.callToAction = !this.callToAction;
+          this.updateCTAButton();
+          localStorage.setItem('callToAction', this.callToAction.toString());
+        });
+
+        document.getElementById('emoji-btn').addEventListener('click', () => {
+          this.emojis = !this.emojis;
+          this.updateEmojiButton();
+          localStorage.setItem('emojis', this.emojis.toString());
         });
 
         document.getElementById('copy-btn').addEventListener('click', () => {
@@ -463,43 +581,6 @@
           }
         });
 
-        document.getElementById('paste-btn').addEventListener('click', async () => {
-          try {
-            // Try modern clipboard API first
-            if (navigator.clipboard && navigator.clipboard.readText) {
-              const text = await navigator.clipboard.readText();
-              if (text) {
-                // Insert pasted text with reverse video style
-                const span = document.createElement('span');
-                span.className = 'input-reverse';
-                span.textContent = text;
-                this.input.appendChild(span);
-                
-                // Move cursor to end
-                const range = document.createRange();
-                const sel = window.getSelection();
-                range.setStartAfter(span);
-                range.collapse(true);
-                sel.removeAllRanges();
-                sel.addRange(range);
-                this.scrollToBottom();
-              }
-            } else {
-              alert('Paste from clipboard is not supported. Use Ctrl+V instead.');
-            }
-          } catch (err) {
-            alert('Failed to paste. Use Ctrl+V instead.');
-          }
-        });
-
-        document.getElementById('send-btn').addEventListener('click', async () => {
-          const cmd = this.input.textContent.trim();
-          if (cmd) {
-            this.input.innerHTML = '';
-            await this.process(cmd);
-          }
-        });
-
         document.getElementById('support-btn').addEventListener('click', () => {
           window.open('https://ko-fi.com/researchkofi', '_blank');
         });
@@ -533,13 +614,16 @@
             const id = e.target.id;
             if (id === 'edit-endpoint') {
               this.modelEndpoint = e.target.textContent.trim();
+              localStorage.setItem('modelEndpoint', this.modelEndpoint);
             } else if (id === 'edit-model') {
               this.model = e.target.textContent.trim();
+              localStorage.setItem('model', this.model);
             } else if (id === 'edit-key') {
               this.keyFieldBeingEdited = false;
               const value = e.target.textContent.trim();
               if (!value.match(/^•+$/) && value !== 'NULL' && value !== '') {
                 this.apiKey = value;
+                localStorage.setItem('apiKey', this.apiKey); // Now saves for user convenience
               }
               // Mask the key in place without re-rendering to prevent layout shift
               const maskedKey = (this.apiKey && this.apiKey !== 'NULL') ? '•'.repeat(this.apiKey.length) : 'NULL';
@@ -552,8 +636,10 @@
               } else {
                 this.header = headerText;
               }
+              localStorage.setItem('header', this.header || '');
             } else if (id === 'edit-preference') {
               this.preference = e.target.textContent.trim();
+              localStorage.setItem('preference', this.preference);
             }
           }
         }, true);
@@ -577,6 +663,70 @@
             }
           }
         });
+
+        // === Force plain text only in config fields ===
+        this.display.addEventListener('paste', (e) => {
+          if (e.target.classList.contains('config-value')) {
+            e.preventDefault();
+            const text = (e.clipboardData || window.clipboardData).getData('text/plain');
+            document.execCommand('insertText', false, text);
+          }
+        }, true);
+
+        this.display.addEventListener('input', (e) => {
+          if (e.target.classList.contains('config-value')) {
+            const el = e.target;
+            // If any HTML tags sneaked in → flatten to text
+            if (el.innerHTML !== el.textContent) {
+              const plainText = el.textContent;
+              el.innerHTML = '';
+              el.appendChild(document.createTextNode(plainText));
+              
+              // Move cursor to end
+              const range = document.createRange();
+              range.selectNodeContents(el);
+              range.collapse(false);
+              const sel = window.getSelection();
+              sel.removeAllRanges();
+              sel.addRange(range);
+            }
+          }
+        }, true);
+      }
+
+      updateToxicButton() {
+        const btn = document.getElementById('toxic-btn');
+        const labels = {
+          'positive': 'Positive',
+          'toxic': 'Toxic',
+          'formal': 'Formal',
+          'humorous': 'Humorous'
+        };
+        btn.textContent = labels[this.toxic] || 'Positive';
+      }
+
+      updatePolarityButton() {
+        const btn = document.getElementById('polarity-btn');
+        btn.textContent = this.truth ? 'Short Form' : 'Long Form';
+      }
+
+      updateSentenceButton() {
+        const btn = document.getElementById('sentence-btn');
+        if (this.sentenceCount === 'off') {
+          btn.textContent = 'OFF';
+        } else {
+          btn.textContent = this.sentenceCount + ' Sentence' + (this.sentenceCount === '1' ? '' : 's');
+        }
+      }
+
+      updateCTAButton() {
+        const btn = document.getElementById('cta-btn');
+        btn.textContent = 'Call to Action: ' + (this.callToAction ? 'YES' : 'NO');
+      }
+
+      updateEmojiButton() {
+        const btn = document.getElementById('emoji-btn');
+        btn.textContent = 'Emojis: ' + (this.emojis ? 'YES' : 'NO');
       }
 
       normalizeInput() {
@@ -745,6 +895,9 @@
               probe: fullProbe,
               truth: this.truth,
               toxic: this.toxic,
+              sentence_count: this.sentenceCount,
+              call_to_action: this.callToAction,
+              emojis: this.emojis,
               preference: this.preference,
               base_url: this.modelEndpoint,
               api_key: this.apiKey,
@@ -798,20 +951,29 @@
         
         if (endpointEl && endpointEl.textContent.trim() !== 'NULL') {
           this.modelEndpoint = endpointEl.textContent.trim();
+          localStorage.setItem('modelEndpoint', this.modelEndpoint);
         }
         if (modelEl && modelEl.textContent.trim() !== 'NULL') {
           this.model = modelEl.textContent.trim();
+          localStorage.setItem('model', this.model);
         }
         if (keyEl && !this.keyFieldBeingEdited) {
           const keyText = keyEl.textContent.trim();
           // Only update apiKey if it's NOT bullets (meaning user edited it)
           if (!keyText.match(/^•+$/) && keyText !== 'NULL' && keyText !== '') {
             this.apiKey = keyText;
+            localStorage.setItem('apiKey', this.apiKey); // Now saves for user convenience
           }
           // If it's bullets or NULL, keep the existing this.apiKey value
         }
+        if (headerEl) {
+          const headerText = headerEl.textContent;
+          this.header = (headerText !== 'NULL' && headerText !== '') ? headerText : '';
+          localStorage.setItem('header', this.header);
+        }
         if (preferenceEl && preferenceEl.textContent.trim() !== 'NULL') {
           this.preference = preferenceEl.textContent.trim();
+          localStorage.setItem('preference', this.preference);
         }
 
         let output = '';
@@ -941,6 +1103,7 @@
             } else if (cmdLower === '/polarity') {
               this.truth = !this.truth;
               document.getElementById('polarity-btn').textContent = this.truth ? 'Short Response' : 'Long Response';
+              localStorage.setItem('truth', this.truth.toString());
               this.state = State.PROBE_RECOVER;
             } else if (cmdLower === '/endpoint') {
               this.state = State.CALIBRATE_ENDPOINT_RECOVER;
@@ -977,6 +1140,7 @@
             } else if (cmdLower === '/polarity') {
               this.truth = !this.truth;
               document.getElementById('polarity-btn').textContent = this.truth ? 'Short Response' : 'Long Response';
+              localStorage.setItem('truth', this.truth.toString());
               this.lastInitiation = null;
               this.state = State.PROBE_RECOVER;
             } else if (cmdLower === '/endpoint') {
