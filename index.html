@@ -189,13 +189,15 @@
     #input {
       flex: 0 0 auto;
       border: none;
+      border-top: 2px solid rgba(189, 206, 241, 0.3);
       outline: none;
-      background: transparent;
+      background: rgba(34, 34, 34, 0.5);
       color: inherit;
       font-family: inherit;
       font-size: 1.1em;
       line-height: 1.6;
-      padding: 0 1ch;
+      padding: 1em 1ch;
+      min-height: 3em;
       caret-color: transparent;
       max-height: 10em;
       overflow-y: auto;
@@ -413,6 +415,19 @@
           this.inlineCursor.style.display = 'none';
         });
 
+        this.input.addEventListener('paste', (e) => {
+          e.preventDefault();
+          const text = (e.clipboardData || window.clipboardData).getData('text/plain');
+          if (text) {
+            // Clear input and wrap text in reverse video
+            this.input.innerHTML = '';
+            const span = document.createElement('span');
+            span.className = 'input-reverse';
+            span.textContent = text;
+            this.input.appendChild(span);
+          }
+        });
+
         document.addEventListener('selectionchange', () => {
           if (document.activeElement === this.input) {
             this.updateInlineCursor();
@@ -576,19 +591,12 @@
           try {
             const text = await navigator.clipboard.readText();
             if (text) {
-              // Insert at cursor position or append to end
-              const selection = window.getSelection();
-              if (selection.rangeCount > 0 && this.input.contains(selection.anchorNode)) {
-                const range = selection.getRangeAt(0);
-                range.deleteContents();
-                range.insertNode(document.createTextNode(text));
-                // Move cursor to end of inserted text
-                range.collapse(false);
-                selection.removeAllRanges();
-                selection.addRange(range);
-              } else {
-                this.input.textContent += text;
-              }
+              // Clear input and wrap text in reverse video
+              this.input.innerHTML = '';
+              const span = document.createElement('span');
+              span.className = 'input-reverse';
+              span.textContent = text;
+              this.input.appendChild(span);
               
               btn.textContent = 'Pasted!';
               setTimeout(() => {
@@ -890,6 +898,9 @@
         const newLineHeight = window.innerHeight / 24;
         document.body.style.fontSize = `${newFontSize}px`;
         document.body.style.lineHeight = `${newLineHeight}px`;
+        
+        // Update cursor position after font size change
+        setTimeout(() => this.updateInlineCursor(), 0);
       }
 
       startWait() {
@@ -971,7 +982,7 @@
           } else if (line.startsWith('llm:\n')) {
             const response = line.slice('llm:\n'.length);
             // Response already has header built in - don't add it again
-            return 'reply:\n' + response + '<div class="message-separator"></div>';
+            return '<span class="reverse-video">reply:</span>\n' + response + '<div class="message-separator"></div>';
           }
           return line;
         }).join('');
