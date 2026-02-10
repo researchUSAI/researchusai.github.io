@@ -361,7 +361,7 @@
         
         // Load from localStorage (browser cache)
         this.modelEndpoint = localStorage.getItem('modelEndpoint') || 'https://api.x.ai';
-        this.model = localStorage.getItem('model') || 'grok-3';
+        this.model = localStorage.getItem('model') || 'grok-4-1-fast-reasoning';
         this.apiKey = localStorage.getItem('apiKey') || ''; // Now persists for user convenience
         this.header = localStorage.getItem('header') || '';
         this.preference = localStorage.getItem('preference') || '';
@@ -1123,7 +1123,7 @@
         let blockInput = false;
 
         output += '<span class="reverse-video">endpoint:</span> <span id="edit-endpoint" class="config-value" contenteditable="true">' + (currentEndpoint || 'https://api.x.ai') + '</span>\n';
-        output += '<span class="reverse-video">model:</span> <span id="edit-model" class="config-value" contenteditable="true">' + (currentModel || 'grok-3') + '</span>\n';
+        output += '<span class="reverse-video">model:</span> <span id="edit-model" class="config-value" contenteditable="true">' + (currentModel || 'grok-4-1-fast-reasoning') + '</span>\n';
         output += '<span class="reverse-video">key:</span> <span id="edit-key" class="config-value" contenteditable="true" data-actual-key="' + (this.apiKey || '') + '">' + currentKeyDisplay + '</span>\n';
         const headerDisplay = currentHeader || 'NULL';
         const headerAttr = (currentHeader || '').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
@@ -1154,7 +1154,7 @@
             output += '/route\n<span class="reverse-video">endpoint: ' + (this.modelEndpoint || 'https://api.x.ai') + '</span>';
             break;
           case State.CALIBRATE_MODEL_RECOVER:
-            output += '/route\n<span class="reverse-video">model: ' + (this.model || 'grok-3') + '</span>';
+            output += '/route\n<span class="reverse-video">model: ' + (this.model || 'grok-4-1-fast-reasoning') + '</span>';
             break;
           case State.CALIBRATE_KEY_RECOVER:
             output += '/route\n<span class="reverse-video">key: ' + (this.apiKey || 'NULL') + '</span>';
