@@ -978,7 +978,7 @@
         return this.stack.map(line => {
           if (line.startsWith('user:\n')) {
             const probe = line.slice('user:\n'.length);
-            return '<span class="reverse-video">post:\n' + probe + '</span><div class="message-separator"></div>';
+            return '<span class="reverse-video">post:</span>\n' + probe + '<div class="message-separator"></div>';
           } else if (line.startsWith('llm:\n')) {
             const response = line.slice('llm:\n'.length);
             // Response already has header built in - don't add it again
