@@ -76,6 +76,18 @@
       display: flex;
       gap: 1em;
       align-items: center;
+      flex-wrap: wrap;
+    }
+    @media (max-width: 768px) {
+      #toolbar {
+        gap: 0.5em;
+        padding: 0.5em 0.5ch;
+      }
+      #toolbar button {
+        padding: 0.35em 0.6em;
+        font-size: 0.8em;
+        min-width: 70px;
+      }
     }
     #toolbar button {
       background: #333;
@@ -318,6 +330,15 @@
           }
         });
 
+        // Strip formatting when pasting into config fields
+        this.display.addEventListener('paste', (e) => {
+          if (e.target.classList.contains('config-value')) {
+            e.preventDefault();
+            const text = e.clipboardData.getData('text/plain');
+            document.execCommand('insertText', false, text);
+          }
+        });
+
         document.getElementById('export-btn').addEventListener('click', () => {
           if (this.currentStructure) {
             this.currentStructure.release(this.header);
@@ -443,50 +464,40 @@
         });
 
         document.getElementById('paste-btn').addEventListener('click', async () => {
-          const btn = document.getElementById('paste-btn');
-          
-          // Prevent multiple clicks
-          if (btn.textContent === 'Pasted!') return;
-          
           try {
-            // Read clipboard as plain text
-            const text = await navigator.clipboard.readText();
-            
-            if (text) {
-              // Clear the input field
-              this.input.innerHTML = '';
-              
-              // Create reverse video span with plain text
-              const span = document.createElement('span');
-              span.className = 'input-reverse';
-              span.textContent = text; // textContent ensures plain text
-              this.input.appendChild(span);
-              
-              // Focus the input and move cursor to end
-              this.input.focus();
-              const range = document.createRange();
-              range.selectNodeContents(this.input);
-              range.collapse(false);
-              const sel = window.getSelection();
-              sel.removeAllRanges();
-              sel.addRange(range);
-              
-              // Show feedback
-              btn.textContent = 'Pasted!';
-              setTimeout(() => {
-                btn.textContent = 'Paste';
-              }, 1000);
+            // Try modern clipboard API first
+            if (navigator.clipboard && navigator.clipboard.readText) {
+              const text = await navigator.clipboard.readText();
+              if (text) {
+                // Insert pasted text with reverse video style
+                const span = document.createElement('span');
+                span.className = 'input-reverse';
+                span.textContent = text;
+                this.input.appendChild(span);
+                
+                // Move cursor to end
+                const range = document.createRange();
+                const sel = window.getSelection();
+                range.setStartAfter(span);
+                range.collapse(true);
+                sel.removeAllRanges();
+                sel.addRange(range);
+                this.scrollToBottom();
+              }
+            } else {
+              alert('Paste from clipboard is not supported. Use Ctrl+V instead.');
             }
           } catch (err) {
-            alert('Failed to paste: ' + err.message);
+            alert('Failed to paste. Use Ctrl+V instead.');
           }
         });
 
         document.getElementById('send-btn').addEventListener('click', async () => {
-          // Simulate pressing Enter
           const cmd = this.input.textContent.trim();
-          this.input.innerHTML = '';
-          if (cmd) await this.process(cmd);
+          if (cmd) {
+            this.input.innerHTML = '';
+            await this.process(cmd);
+          }
         });
 
         document.getElementById('support-btn').addEventListener('click', () => {
@@ -566,35 +577,6 @@
             }
           }
         });
-
-        // === Force plain text only in config fields ===
-        this.display.addEventListener('paste', (e) => {
-          if (e.target.classList.contains('config-value')) {
-            e.preventDefault();
-            const text = (e.clipboardData || window.clipboardData).getData('text/plain');
-            document.execCommand('insertText', false, text);
-          }
-        }, true);
-
-        this.display.addEventListener('input', (e) => {
-          if (e.target.classList.contains('config-value')) {
-            const el = e.target;
-            // If any HTML tags sneaked in → flatten to text
-            if (el.innerHTML !== el.textContent) {
-              const plainText = el.textContent;
-              el.innerHTML = '';
-              el.appendChild(document.createTextNode(plainText));
-              
-              // Move cursor to end
-              const range = document.createRange();
-              range.selectNodeContents(el);
-              range.collapse(false);
-              const sel = window.getSelection();
-              sel.removeAllRanges();
-              sel.addRange(range);
-            }
-          }
-        }, true);
       }
 
       normalizeInput() {
