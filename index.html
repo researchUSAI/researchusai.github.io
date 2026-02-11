@@ -681,9 +681,10 @@
                 localStorage.setItem('accessCode', this.accessCode);
                 const codeEl = document.getElementById('edit-code');
                 if (codeEl) {
-                  codeEl.textContent = '•'.repeat(trimmedCode.length);
+                  codeEl.textContent = trimmedCode;
                   codeEl.setAttribute('data-actual-code', trimmedCode);
                 }
+                this.render(); // Re-render to apply masking
                 btn.textContent = 'Pasted!';
                 setTimeout(() => { btn.textContent = 'Paste Code'; }, 1000);
               }
@@ -711,10 +712,10 @@
                 // Update the key field in the DOM
                 const keyEl = document.getElementById('edit-key');
                 if (keyEl) {
-                  keyEl.textContent = '•'.repeat(trimmedKey.length);
+                  keyEl.textContent = trimmedKey;
                   keyEl.setAttribute('data-actual-key', trimmedKey);
                 }
-                
+                this.render(); // Re-render to apply masking
                 btn.textContent = 'Pasted!';
                 setTimeout(() => {
                   btn.textContent = 'Paste API Key';
@@ -753,6 +754,16 @@
             const sel = window.getSelection();
             sel.removeAllRanges();
             sel.addRange(range);
+          }
+        }, true);
+
+        this.display.addEventListener('blur', (e) => {
+          if (e.target.id === 'edit-key') {
+            this.keyFieldBeingEdited = false;
+            this.render();
+          } else if (e.target.id === 'edit-code') {
+            this.codeFieldBeingEdited = false;
+            this.render();
           }
         }, true);
       }
