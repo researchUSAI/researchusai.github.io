@@ -384,6 +384,7 @@
         this.lastInitiation = null;
         this.lastActionWasFileDrop = false;
         this.keyFieldBeingEdited = false;
+        this.codeFieldBeingEdited = false;
         this.setupEvents();
         this.updateDimensions();
         
@@ -661,7 +662,7 @@
         });
 
         document.getElementById('support-btn').addEventListener('click', () => {
-          window.open('https://ko-fi.com/s/c95d095bc5', '_blank');
+          window.open('https://ko-fi.com/researchkofi/shop', '_blank');
         });
 
         document.getElementById('getkey-btn').addEventListener('click', () => {
@@ -679,7 +680,10 @@
                 this.accessCode = trimmedCode;
                 localStorage.setItem('accessCode', this.accessCode);
                 const codeEl = document.getElementById('edit-code');
-                if (codeEl) codeEl.textContent = trimmedCode;
+                if (codeEl) {
+                  codeEl.textContent = '•'.repeat(trimmedCode.length);
+                  codeEl.setAttribute('data-actual-code', trimmedCode);
+                }
                 btn.textContent = 'Pasted!';
                 setTimeout(() => { btn.textContent = 'Paste Code'; }, 1000);
               }
@@ -729,6 +733,19 @@
             const actualKey = e.target.getAttribute('data-actual-key');
             if (keyText.match(/^•+$/) && actualKey) {
               e.target.textContent = actualKey;
+            }
+            const range = document.createRange();
+            range.selectNodeContents(e.target);
+            range.collapse(false);
+            const sel = window.getSelection();
+            sel.removeAllRanges();
+            sel.addRange(range);
+          } else if (e.target.id === 'edit-code') {
+            this.codeFieldBeingEdited = true;
+            const codeText = e.target.textContent.trim();
+            const actualCode = e.target.getAttribute('data-actual-code');
+            if (codeText.match(/^•+$/) && actualCode) {
+              e.target.textContent = actualCode;
             }
             const range = document.createRange();
             range.selectNodeContents(e.target);
@@ -1054,16 +1071,10 @@
         // Preserve current values from DOM if they exist
         let currentEndpoint = this.modelEndpoint;
         let currentModel = this.model;
-        let currentCode = this.accessCode;
+        let currentCodeDisplay = '';
         let currentKeyDisplay = '';
         let currentHeader = this.header;
         let currentPreference = this.preference;
-        
-        if (codeEl && codeEl.textContent.trim() !== 'NULL') {
-          currentCode = codeEl.textContent.trim();
-          this.accessCode = currentCode;
-          localStorage.setItem('accessCode', this.accessCode);
-        }
         
         if (endpointEl && endpointEl.textContent.trim() !== 'NULL') {
           currentEndpoint = endpointEl.textContent.trim();
@@ -1075,6 +1086,23 @@
           this.model = currentModel;
           localStorage.setItem('model', this.model);
         }
+        if (codeEl && !this.codeFieldBeingEdited) {
+          const codeText = codeEl.textContent.trim();
+          // Only update accessCode if it's NOT bullets (meaning user edited it)
+          if (!codeText.match(/^•+$/) && codeText !== 'NULL' && codeText !== '') {
+            this.accessCode = codeText;
+            localStorage.setItem('accessCode', this.accessCode);
+          }
+          // Show masked code or NULL
+          currentCodeDisplay = (this.accessCode && this.accessCode !== 'NULL' && this.accessCode !== '') ? '•'.repeat(this.accessCode.length) : 'NULL';
+        } else if (codeEl) {
+          // Keep whatever is currently displayed while editing
+          currentCodeDisplay = codeEl.textContent;
+        } else {
+          // First render
+          currentCodeDisplay = (this.accessCode && this.accessCode !== 'NULL' && this.accessCode !== '') ? '•'.repeat(this.accessCode.length) : 'NULL';
+        }
+        
         if (keyEl && !this.keyFieldBeingEdited) {
           const keyText = keyEl.textContent.trim();
           // Only update apiKey if it's NOT bullets (meaning user edited it)
@@ -1110,7 +1138,7 @@
         const structures = this.formatStructures();
         let blockInput = false;
 
-        output += '<span class="reverse-video">code:</span> <span id="edit-code" class="config-value" contenteditable="true">' + (currentCode || 'NULL') + '</span>\n';
+        output += '<span class="reverse-video">code:</span> <span id="edit-code" class="config-value" contenteditable="true" data-actual-code="' + (this.accessCode || '') + '">' + currentCodeDisplay + '</span>\n';
         output += '<span class="reverse-video">endpoint:</span> <span id="edit-endpoint" class="config-value" contenteditable="true">' + (currentEndpoint || 'https://api.x.ai') + '</span>\n';
         output += '<span class="reverse-video">model:</span> <span id="edit-model" class="config-value" contenteditable="true">' + (currentModel || 'grok-4-1-fast-reasoning') + '</span>\n';
         output += '<span class="reverse-video">api key:</span> <span id="edit-key" class="config-value" contenteditable="true" data-actual-key="' + (this.apiKey || '') + '">' + currentKeyDisplay + '</span>\n';
@@ -1155,6 +1183,15 @@
         }
 
         this.display.innerHTML = output;
+        
+        // Set masked code text content after HTML is rendered to preserve whitespace
+        if (!this.codeFieldBeingEdited) {
+          const codeElAfterRender = document.getElementById('edit-code');
+          if (codeElAfterRender) {
+            const maskedCode = (this.accessCode && this.accessCode !== 'NULL') ? '•'.repeat(this.accessCode.length) : 'NULL';
+            codeElAfterRender.textContent = maskedCode;
+          }
+        }
         
         // Set masked key text content after HTML is rendered to preserve whitespace
         if (!this.keyFieldBeingEdited) {
