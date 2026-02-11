@@ -880,7 +880,7 @@
             selection.addRange(range);
           }
         }
-        this.scrollToBottom();
+        // Removed scrollToBottom - don't scroll display during typing
       }
 
       updateDimensions() {
@@ -916,7 +916,6 @@
 
       scrollToBottom() {
         this.display.scrollTop = this.display.scrollHeight;
-        this.input.scrollTop = this.input.scrollHeight;
       }
 
       updateInlineCursor() {
@@ -1051,6 +1050,7 @@
             }
 
             this.render();
+            this.scrollToBottom(); // Scroll display during streaming
           }
 
           // Extract complete response (with header) from stack
@@ -1188,10 +1188,9 @@
           } else {
             this.input.textContent = '';
           }
-          // Removed auto-focus to prevent mobile keyboard popup
-          this.scrollToBottom();
+          // Removed auto-scroll - only scroll during LLM streaming
         } else {
-          this.scrollToBottom();
+          // Don't auto-scroll here either
         }
       }
 
