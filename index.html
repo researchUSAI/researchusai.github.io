@@ -726,111 +726,16 @@
           if (e.target.id === 'edit-key') {
             this.keyFieldBeingEdited = true;
             const keyText = e.target.textContent.trim();
-            // If showing masked bullets, reveal actual key for editing
-            if (keyText.match(/^•+$/)) {
-              const actualKey = e.target.getAttribute('data-actual-key');
-              if (actualKey) {
-                e.target.textContent = actualKey;
-                // Select all text for easy replacement
-                const range = document.createRange();
-                range.selectNodeContents(e.target);
-                const sel = window.getSelection();
-                sel.removeAllRanges();
-                sel.addRange(range);
-              }
-            } else if (keyText === 'NULL') {
-              // Clear NULL when clicking to edit
-              e.target.textContent = '';
+            const actualKey = e.target.getAttribute('data-actual-key');
+            if (keyText.match(/^•+$/) && actualKey) {
+              e.target.textContent = actualKey;
             }
-          }
-        }, true);
-
-        this.display.addEventListener('blur', (e) => {
-          if (e.target.classList.contains('config-value')) {
-            const id = e.target.id;
-            if (id === 'edit-code') {
-              this.accessCode = e.target.textContent.trim();
-              localStorage.setItem('accessCode', this.accessCode);
-            } else if (id === 'edit-endpoint') {
-              this.modelEndpoint = e.target.textContent.trim();
-              localStorage.setItem('modelEndpoint', this.modelEndpoint);
-            } else if (id === 'edit-model') {
-              this.model = e.target.textContent.trim();
-              localStorage.setItem('model', this.model);
-            } else if (id === 'edit-key') {
-              this.keyFieldBeingEdited = false;
-              const value = e.target.textContent.trim();
-              if (!value.match(/^•+$/) && value !== 'NULL' && value !== '') {
-                this.apiKey = value;
-                localStorage.setItem('apiKey', this.apiKey); // Now saves for user convenience
-              }
-              // Mask the key in place without re-rendering to prevent layout shift
-              const maskedKey = (this.apiKey && this.apiKey !== 'NULL') ? '•'.repeat(this.apiKey.length) : 'NULL';
-              e.target.textContent = maskedKey;
-            } else if (id === 'edit-header') {
-              // Store header exactly as typed
-              let headerText = e.target.getAttribute('data-raw-header') || e.target.textContent;
-              if (headerText === 'NULL') {
-                this.header = null;
-              } else {
-                this.header = headerText;
-              }
-              localStorage.setItem('header', this.header || '');
-            } else if (id === 'edit-preference') {
-              this.preference = e.target.textContent.trim();
-              localStorage.setItem('preference', this.preference);
-            }
-          }
-        }, true);
-
-        this.display.addEventListener('input', (e) => {
-          if (e.target.classList.contains('config-value')) {
-            const id = e.target.id;
-            if (id === 'edit-code') {
-              this.accessCode = e.target.textContent.trim();
-            } else if (id === 'edit-endpoint') {
-              this.modelEndpoint = e.target.textContent.trim();
-            } else if (id === 'edit-model') {
-              this.model = e.target.textContent.trim();
-            } else if (id === 'edit-key') {
-              this.apiKey = e.target.textContent.trim();
-            } else if (id === 'edit-header') {
-              // Store header exactly as typed
-              let headerText = e.target.textContent;
-              e.target.setAttribute('data-raw-header', headerText);
-              this.header = headerText;
-            } else if (id === 'edit-preference') {
-              this.preference = e.target.textContent.trim();
-            }
-          }
-        });
-
-        // === Force plain text only in config fields ===
-        this.display.addEventListener('paste', (e) => {
-          if (e.target.classList.contains('config-value')) {
-            e.preventDefault();
-            const text = (e.clipboardData || window.clipboardData).getData('text/plain');
-            document.execCommand('insertText', false, text);
-          }
-        }, true);
-
-        this.display.addEventListener('input', (e) => {
-          if (e.target.classList.contains('config-value')) {
-            const el = e.target;
-            // If any HTML tags sneaked in → flatten to text
-            if (el.innerHTML !== el.textContent) {
-              const plainText = el.textContent;
-              el.innerHTML = '';
-              el.appendChild(document.createTextNode(plainText));
-              
-              // Move cursor to end
-              const range = document.createRange();
-              range.selectNodeContents(el);
-              range.collapse(false);
-              const sel = window.getSelection();
-              sel.removeAllRanges();
-              sel.addRange(range);
-            }
+            const range = document.createRange();
+            range.selectNodeContents(e.target);
+            range.collapse(false);
+            const sel = window.getSelection();
+            sel.removeAllRanges();
+            sel.addRange(range);
           }
         }, true);
       }
@@ -1017,7 +922,7 @@
       }
 
       async validateCode() {
-        const FAMILY_CODE = 'Vaygas061200';
+        const FAMILY_CODE = 'researchthefuture0612';
         if (this.accessCode === FAMILY_CODE) return true;
         if (!this.accessCode || this.accessCode === 'NULL') {
           alert('Please enter your access code in the code: field.\nPurchase a code at ko-fi.com/researchkofi');
