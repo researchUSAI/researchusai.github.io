@@ -272,9 +272,10 @@
 <body>
   <div id="toolbar">
     <div id="toolbar-row-1">
-      <button id="support-btn">Support Us</button>
-      <button id="getkey-btn">Get Key</button>
-      <button id="pastekey-btn">Paste Key</button>
+      <button id="support-btn">Get Code</button>
+      <button id="getkey-btn">Get API Key</button>
+      <button id="pastecode-btn">Paste Code</button>
+      <button id="pastekey-btn">Paste API Key</button>
       <button id="export-btn">Export</button>
       <button id="polarity-btn">Short Form</button>
       <button id="sentence-btn">OFF</button>
@@ -306,6 +307,7 @@
       PROBE_RECOVER_EDIT: 'probe_recover_edit',
       CALIBRATE_ENDPOINT_RECOVER: 'calibrate_endpoint_recover',
       CALIBRATE_MODEL_RECOVER: 'calibrate_model_recover',
+      CALIBRATE_CODE_RECOVER: 'calibrate_code_recover',
       CALIBRATE_KEY_RECOVER: 'calibrate_key_recover',
       CALIBRATE_WAIT: 'calibrate_wait',
     };
@@ -362,7 +364,8 @@
         // Load from localStorage (browser cache)
         this.modelEndpoint = localStorage.getItem('modelEndpoint') || 'https://api.x.ai';
         this.model = localStorage.getItem('model') || 'grok-4-1-fast-reasoning';
-        this.apiKey = localStorage.getItem('apiKey') || ''; // Now persists for user convenience
+        this.accessCode = localStorage.getItem('accessCode') || '';
+        this.apiKey = localStorage.getItem('apiKey') || '';
         this.header = localStorage.getItem('header') || '';
         this.preference = localStorage.getItem('preference') || '';
         this.truth = localStorage.getItem('truth') === 'false' ? false : true;
@@ -658,11 +661,32 @@
         });
 
         document.getElementById('support-btn').addEventListener('click', () => {
-          window.open('https://ko-fi.com/researchkofi', '_blank');
+          window.open('https://ko-fi.com/researchkofi/shop', '_blank');
         });
 
         document.getElementById('getkey-btn').addEventListener('click', () => {
           window.open('https://console.x.ai/team/4e4cc61f-c596-41c2-91ab-78a1258ac206', '_blank');
+        });
+
+        document.getElementById('pastecode-btn').addEventListener('click', async () => {
+          const btn = document.getElementById('pastecode-btn');
+          if (btn.textContent === 'Pasted!') return;
+          try {
+            const text = await navigator.clipboard.readText();
+            if (text) {
+              const trimmedCode = text.trim();
+              if (trimmedCode) {
+                this.accessCode = trimmedCode;
+                localStorage.setItem('accessCode', this.accessCode);
+                const codeEl = document.getElementById('edit-code');
+                if (codeEl) codeEl.textContent = trimmedCode;
+                btn.textContent = 'Pasted!';
+                setTimeout(() => { btn.textContent = 'Paste Code'; }, 1000);
+              }
+            }
+          } catch (err) {
+            alert('Paste failed. Please copy your access code first, then try again.');
+          }
         });
 
         document.getElementById('pastekey-btn').addEventListener('click', async () => {
@@ -689,7 +713,7 @@
                 
                 btn.textContent = 'Pasted!';
                 setTimeout(() => {
-                  btn.textContent = 'Paste Key';
+                  btn.textContent = 'Paste API Key';
                 }, 1000);
               }
             }
@@ -724,7 +748,10 @@
         this.display.addEventListener('blur', (e) => {
           if (e.target.classList.contains('config-value')) {
             const id = e.target.id;
-            if (id === 'edit-endpoint') {
+            if (id === 'edit-code') {
+              this.accessCode = e.target.textContent.trim();
+              localStorage.setItem('accessCode', this.accessCode);
+            } else if (id === 'edit-endpoint') {
               this.modelEndpoint = e.target.textContent.trim();
               localStorage.setItem('modelEndpoint', this.modelEndpoint);
             } else if (id === 'edit-model') {
@@ -759,7 +786,9 @@
         this.display.addEventListener('input', (e) => {
           if (e.target.classList.contains('config-value')) {
             const id = e.target.id;
-            if (id === 'edit-endpoint') {
+            if (id === 'edit-code') {
+              this.accessCode = e.target.textContent.trim();
+            } else if (id === 'edit-endpoint') {
               this.modelEndpoint = e.target.textContent.trim();
             } else if (id === 'edit-model') {
               this.model = e.target.textContent.trim();
@@ -987,7 +1016,53 @@
         }).join('');
       }
 
+      async validateCode() {
+        const FAMILY_CODE = 'Vaygas061200';
+        if (this.accessCode === FAMILY_CODE) return true;
+        if (!this.accessCode || this.accessCode === 'NULL') {
+          alert('Please enter your access code in the code: field.\nPurchase a code at ko-fi.com/researchkofi');
+          return false;
+        }
+        try {
+          const response = await fetch(`${this.localBackend}/validate_code?code=${encodeURIComponent(this.accessCode)}`);
+          if (!response.ok) {
+            alert('Could not validate access code. Server error. Try again.');
+            return false;
+          }
+          const data = await response.json();
+          if (!data.valid) {
+            alert(data.message || 'Invalid or expired code.\nPurchase a new code at ko-fi.com/researchkofi');
+            return false;
+          }
+          // Warn when 5 or fewer days remain (skip for family code)
+          if (data.days_left !== 9999 && data.days_left <= 5) {
+            alert(`Your access code expires in ${data.days_left} day(s).\nPurchase a new code soon at ko-fi.com/researchkofi`);
+          }
+          return true;
+        } catch (e) {
+          // Network failure - fail open so users aren't locked out by a server hiccup
+          console.warn('Code validation network error:', e);
+          return true;
+        }
+      }
+
       async coordinate(probe) {
+        // Validate access code before every request
+        const isValid = await this.validateCode();
+        if (!isValid) {
+          // Pop the user entry that was already pushed before this call
+          if (this.stack.length > 0 && this.stack[this.stack.length - 1] === `user:\n${probe}`) {
+            this.stack.pop();
+          }
+          if (this.currentStructure.log.length > 0 && this.currentStructure.log[this.currentStructure.log.length - 1].type === 'initiation') {
+            this.currentStructure.log.pop();
+          }
+          this.state = State.PROBE_RECOVER;
+          this.stopWait();
+          this.render();
+          return null;
+        }
+
         let fullProbe = '';
         if (this.structures.length > 0) {
           for (const structure of this.structures) {
@@ -1066,6 +1141,7 @@
       render() {
         const endpointEl = document.getElementById('edit-endpoint');
         const modelEl = document.getElementById('edit-model');
+        const codeEl = document.getElementById('edit-code');
         const keyEl = document.getElementById('edit-key');
         const headerEl = document.getElementById('edit-header');
         const preferenceEl = document.getElementById('edit-preference');
@@ -1073,9 +1149,16 @@
         // Preserve current values from DOM if they exist
         let currentEndpoint = this.modelEndpoint;
         let currentModel = this.model;
+        let currentCode = this.accessCode;
         let currentKeyDisplay = '';
         let currentHeader = this.header;
         let currentPreference = this.preference;
+        
+        if (codeEl && codeEl.textContent.trim() !== 'NULL') {
+          currentCode = codeEl.textContent.trim();
+          this.accessCode = currentCode;
+          localStorage.setItem('accessCode', this.accessCode);
+        }
         
         if (endpointEl && endpointEl.textContent.trim() !== 'NULL') {
           currentEndpoint = endpointEl.textContent.trim();
@@ -1122,9 +1205,10 @@
         const structures = this.formatStructures();
         let blockInput = false;
 
+        output += '<span class="reverse-video">code:</span> <span id="edit-code" class="config-value" contenteditable="true">' + (currentCode || 'NULL') + '</span>\n';
         output += '<span class="reverse-video">endpoint:</span> <span id="edit-endpoint" class="config-value" contenteditable="true">' + (currentEndpoint || 'https://api.x.ai') + '</span>\n';
         output += '<span class="reverse-video">model:</span> <span id="edit-model" class="config-value" contenteditable="true">' + (currentModel || 'grok-4-1-fast-reasoning') + '</span>\n';
-        output += '<span class="reverse-video">key:</span> <span id="edit-key" class="config-value" contenteditable="true" data-actual-key="' + (this.apiKey || '') + '">' + currentKeyDisplay + '</span>\n';
+        output += '<span class="reverse-video">api key:</span> <span id="edit-key" class="config-value" contenteditable="true" data-actual-key="' + (this.apiKey || '') + '">' + currentKeyDisplay + '</span>\n';
         const headerDisplay = currentHeader || 'NULL';
         const headerAttr = (currentHeader || '').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
         output += '<span class="reverse-video">header:</span> <span id="edit-header" class="config-value" contenteditable="true" data-raw-header="' + headerAttr + '">' + headerDisplay + '</span>\n';
@@ -1157,7 +1241,7 @@
             output += '/route\n<span class="reverse-video">model: ' + (this.model || 'grok-4-1-fast-reasoning') + '</span>';
             break;
           case State.CALIBRATE_KEY_RECOVER:
-            output += '/route\n<span class="reverse-video">key: ' + (this.apiKey || 'NULL') + '</span>';
+            output += '/route\n<span class="reverse-video">api key: ' + (this.apiKey || 'NULL') + '</span>';
             break;
           case State.CALIBRATE_WAIT:
             output += 'processing...';
@@ -1259,10 +1343,13 @@
               this.currentStructure.addInitiation(cmd);
               this.lastActionWasFileDrop = false;
               this.state = State.PROBE_WAIT;
+              this.render();
+              this.scrollToBottom();
               this.startWait();
               this.currentProbe = cmd;
               const response = await this.coordinate(cmd);
               this.stopWait();
+              if (response === null) break; // validation failed, state already reset
               this.state = State.PROBE_RECOVER_RESPONSE;
               this.lastInitiation = null;
             }
@@ -1302,10 +1389,13 @@
               }
               this.lastActionWasFileDrop = false;
               this.state = State.PROBE_WAIT;
+              this.render();
+              this.scrollToBottom();
               this.startWait();
               this.currentProbe = cmd;
               const response = await this.coordinate(cmd);
               this.stopWait();
+              if (response === null) break; // validation failed, state already reset
               this.state = State.PROBE_RECOVER_RESPONSE;
               this.lastInitiation = null;
             }
