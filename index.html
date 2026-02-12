@@ -1210,7 +1210,7 @@
           localStorage.setItem('model', this.model);
         }
         if (codeEl && !this.codeFieldBeingEdited) {
-          const codeText = codeEl.textContent.trim();
+          const codeText = codeEl.textContent.replace(/\s+/g, '');
           // Only update accessCode if it's NOT bullets (meaning user edited it)
           if (!codeText.match(/^•+$/) && codeText !== 'NULL' && codeText !== '') {
             this.accessCode = codeText;
@@ -1227,7 +1227,7 @@
         }
         
         if (keyEl && !this.keyFieldBeingEdited) {
-          const keyText = keyEl.textContent.trim();
+          const keyText = keyEl.textContent.replace(/\s+/g, '');
           // Only update apiKey if it's NOT bullets (meaning user edited it)
           if (!keyText.match(/^•+$/) && keyText !== 'NULL' && keyText !== '') {
             this.apiKey = keyText;
