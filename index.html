@@ -318,6 +318,7 @@
       <button id="cta-btn">Call to Action: NO</button>
       <button id="emoji-btn">Emojis: NO</button>
       <button id="toxic-btn">Positive</button>
+      <button id="toxic-btn">Positive</button>
       <button id="back-btn">Back</button>
       <button id="clear-btn">Clear</button>
       <button id="paste-btn">Paste</button>
@@ -407,7 +408,7 @@
         this.header = localStorage.getItem('header') || '';
         this.preference = localStorage.getItem('preference') || null;
         this.truth = localStorage.getItem('truth') === 'false' ? false : true;
-        this.toxic = localStorage.getItem('toxic') || 'positive'; // New: positive, toxic, formal, humorous
+        this.toxic = (['positive','formal','humorous'].includes(localStorage.getItem('toxic'))) ? localStorage.getItem('toxic') : 'positive'; // positive, formal, humorous
         this.sentenceCount = localStorage.getItem('sentenceCount') || 'off'; // New: off, 1, 2, 3
         this.callToAction = localStorage.getItem('callToAction') === 'true'; // New: true/false
         this.emojis = localStorage.getItem('emojis') === 'true'; // New: true/false
@@ -429,11 +430,11 @@
         this.updateDimensions();
         
         // Update button text based on loaded state
-        this.updateToxicButton();
         this.updatePolarityButton();
         this.updateSentenceButton();
         this.updateCTAButton();
         this.updateEmojiButton();
+        this.updateToxicButton();
       }
 
       setupDragHandles() {
@@ -643,15 +644,6 @@
           }
         });
 
-        document.getElementById('toxic-btn').addEventListener('click', () => {
-          // Cycle through: positive -> toxic -> formal -> humorous -> positive
-          const modes = ['positive', 'toxic', 'formal', 'humorous'];
-          const currentIndex = modes.indexOf(this.toxic);
-          this.toxic = modes[(currentIndex + 1) % modes.length];
-          this.updateToxicButton();
-          localStorage.setItem('toxic', this.toxic);
-        });
-
         document.getElementById('polarity-btn').addEventListener('click', () => {
           this.truth = !this.truth;
           this.updatePolarityButton();
@@ -677,7 +669,16 @@
         document.getElementById('emoji-btn').addEventListener('click', () => {
           this.emojis = !this.emojis;
           this.updateEmojiButton();
+        this.updateToxicButton();
           localStorage.setItem('emojis', this.emojis.toString());
+        });
+
+        document.getElementById('toxic-btn').addEventListener('click', () => {
+          const modes = ['positive', 'formal', 'humorous'];
+          const currentIndex = modes.indexOf(this.toxic);
+          this.toxic = modes[(currentIndex + 1) % modes.length];
+          this.updateToxicButton();
+          localStorage.setItem('toxic', this.toxic);
         });
 
         document.getElementById('clear-btn').addEventListener('click', () => {
@@ -880,17 +881,6 @@
         }, true);
       }
 
-      updateToxicButton() {
-        const btn = document.getElementById('toxic-btn');
-        const labels = {
-          'positive': 'Positive',
-          'toxic': 'Toxic',
-          'formal': 'Formal',
-          'humorous': 'Humorous'
-        };
-        btn.textContent = labels[this.toxic] || 'Positive';
-      }
-
       updatePolarityButton() {
         const btn = document.getElementById('polarity-btn');
         btn.textContent = this.truth ? 'Short Form' : 'Long Form';
@@ -913,6 +903,16 @@
       updateEmojiButton() {
         const btn = document.getElementById('emoji-btn');
         btn.textContent = 'Emojis: ' + (this.emojis ? 'YES' : 'NO');
+      }
+
+      updateToxicButton() {
+        const btn = document.getElementById('toxic-btn');
+        const labels = {
+          'positive': 'Positive',
+          'formal': 'Formal',
+          'humorous': 'Humorous'
+        };
+        btn.textContent = labels[this.toxic] || 'Positive';
       }
 
       normalizeInput() {
