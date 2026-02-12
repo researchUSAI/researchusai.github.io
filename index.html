@@ -644,7 +644,7 @@
 
         document.getElementById('toxic-btn').addEventListener('click', () => {
           // Cycle through: positive -> toxic -> formal -> humorous -> positive
-          const modes = ['positive', 'toxic', 'formal', 'humorous'];
+          const modes = ['positive', 'formal', 'humorous'];
           const currentIndex = modes.indexOf(this.toxic);
           this.toxic = modes[(currentIndex + 1) % modes.length];
           this.updateToxicButton();
@@ -878,7 +878,6 @@
         const btn = document.getElementById('toxic-btn');
         const labels = {
           'positive': 'Positive',
-          'toxic': 'Toxic',
           'formal': 'Formal',
           'humorous': 'Humorous'
         };
@@ -1245,10 +1244,17 @@
             localStorage.setItem('header', this.header);
           }
         }
-        if (preferenceEl && preferenceEl.textContent.trim() !== 'NULL') {
-          currentPreference = preferenceEl.textContent.trim();
-          this.preference = currentPreference;
-          localStorage.setItem('preference', this.preference);
+        if (preferenceEl) {
+          const prefText = preferenceEl.textContent.trim();
+          if (prefText !== 'NULL' && prefText !== '') {
+            currentPreference = prefText;
+            this.preference = currentPreference;
+            localStorage.setItem('preference', this.preference);
+          } else {
+            this.preference = '';
+            currentPreference = '';
+            localStorage.removeItem('preference');
+          }
         }
 
         let output = '';
