@@ -405,7 +405,7 @@
         this.accessCode = localStorage.getItem('accessCode') || '';
         this.apiKey = localStorage.getItem('apiKey') || '';
         this.header = localStorage.getItem('header') || '';
-        this.preference = localStorage.getItem('preference') || '';
+        this.preference = localStorage.getItem('preference') || null;
         this.truth = localStorage.getItem('truth') === 'false' ? false : true;
         this.toxic = localStorage.getItem('toxic') || 'positive'; // New: positive, toxic, formal, humorous
         this.sentenceCount = localStorage.getItem('sentenceCount') || 'off'; // New: off, 1, 2, 3
@@ -423,6 +423,7 @@
         this.lastActionWasFileDrop = false;
         this.keyFieldBeingEdited = false;
         this.codeFieldBeingEdited = false;
+        this.preferenceFieldBeingEdited = false;
         this.setupEvents();
         this.setupDragHandles();
         this.updateDimensions();
@@ -847,6 +848,8 @@
             const sel = window.getSelection();
             sel.removeAllRanges();
             sel.addRange(range);
+          } else if (e.target.id === 'edit-preference') {
+            this.preferenceFieldBeingEdited = true;
           } else if (e.target.id === 'edit-code') {
             this.codeFieldBeingEdited = true;
             const codeText = e.target.textContent.trim();
@@ -869,6 +872,9 @@
             this.render();
           } else if (e.target.id === 'edit-code') {
             this.codeFieldBeingEdited = false;
+            this.render();
+          } else if (e.target.id === 'edit-preference') {
+            this.preferenceFieldBeingEdited = false;
             this.render();
           }
         }, true);
@@ -1245,10 +1251,17 @@
             localStorage.setItem('header', this.header);
           }
         }
-        if (preferenceEl && preferenceEl.textContent.trim() !== 'NULL') {
-          currentPreference = preferenceEl.textContent.trim();
-          this.preference = currentPreference;
-          localStorage.setItem('preference', this.preference);
+        if (preferenceEl && !this.preferenceFieldBeingEdited) {
+          const prefText = preferenceEl.textContent.trim();
+          if (prefText !== 'NULL' && prefText !== '') {
+            currentPreference = prefText;
+            this.preference = currentPreference;
+            localStorage.setItem('preference', this.preference);
+          } else if (prefText === '' || prefText === 'NULL') {
+            this.preference = null;
+            currentPreference = null;
+            localStorage.removeItem('preference');
+          }
         }
 
         let output = '';
