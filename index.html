@@ -97,7 +97,8 @@
       51%, 100% { opacity: 0; }
     }
     #toolbar {
-      flex: 0 0 15vh;
+      flex: 0 0 auto;
+      height: var(--toolbar-h, 15vh);
       padding: 0.75em 1ch;
       background: #222;
       border-bottom: 2px solid #BDCEF1;
@@ -107,6 +108,7 @@
       box-shadow: 0 2px 15px rgba(189, 206, 241, 0.3);
       overflow-y: auto;
       overflow-x: hidden;
+      box-sizing: border-box;
     }
     #toolbar-row-1,
     #toolbar-row-2 {
@@ -166,7 +168,8 @@
       background: linear-gradient(145deg, #3a3a3a, #4a4a4a);
     }
     #display-container {
-      flex: 0 0 90vh;
+      flex: 1 1 auto;
+      min-height: 0;
       display: flex;
       flex-direction: column;
       overflow: hidden;
@@ -178,18 +181,20 @@
         0 0 15px rgba(189, 206, 241, 0.15);
     }
     #display {
-      flex: 2 1 0;
-      min-height: 0;
+      flex: 0 0 auto;
+      height: var(--display-h, 66%);
+      min-height: 40px;
       overflow-y: auto;
       padding: 1em 1ch 1em 1ch;
       white-space: pre-wrap;
       word-wrap: break-word;
       font-size: 1.1em;
       line-height: 1.6;
+      box-sizing: border-box;
     }
     #input {
-      flex: 1 1 0;
-      min-height: 0;
+      flex: 1 1 auto;
+      min-height: 40px;
       border: none;
       border-top: 2px solid rgba(189, 206, 241, 0.3);
       outline: none;
@@ -206,6 +211,7 @@
       word-wrap: break-word;
       overflow-wrap: break-word;
       word-break: break-word;
+      box-sizing: border-box;
     }
     #input::selection {
       background: #BDCEF1;
@@ -267,6 +273,36 @@
       background: #BDCEF1;
       box-shadow: 0 0 15px rgba(189, 206, 241, 0.7);
     }
+    /* Drag handles */
+    .drag-handle {
+      flex: 0 0 14px;
+      width: 100%;
+      background: rgba(189, 206, 241, 0.2);
+      border-top: 1px solid rgba(189, 206, 241, 0.5);
+      border-bottom: 1px solid rgba(189, 206, 241, 0.5);
+      cursor: ns-resize;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      user-select: none;
+      touch-action: none;
+      transition: background 0.15s, box-shadow 0.15s;
+      z-index: 10;
+      position: relative;
+    }
+    .drag-handle:hover, .drag-handle.dragging {
+      background: rgba(189, 206, 241, 0.45);
+      box-shadow: 
+        0 0 10px rgba(189, 206, 241, 0.5),
+        inset 0 0 6px rgba(189, 206, 241, 0.3);
+    }
+    .drag-handle::after {
+      content: '━━━━━';
+      color: rgba(189, 206, 241, 0.7);
+      font-size: 0.5em;
+      letter-spacing: 3px;
+      text-shadow: 0 0 6px rgba(189, 206, 241, 0.8);
+    }
   </style>
 </head>
 <body>
@@ -291,8 +327,10 @@
       <button id="copy-btn">Copy</button>
     </div>
   </div>
+  <div class="drag-handle" id="drag-toolbar"></div>
   <div id="display-container">
     <div id="display"></div>
+    <div class="drag-handle" id="drag-display"></div>
     <div id="input" contenteditable="true"></div>
     <div id="inline-cursor"></div>
   </div>
@@ -386,6 +424,7 @@
         this.keyFieldBeingEdited = false;
         this.codeFieldBeingEdited = false;
         this.setupEvents();
+        this.setupDragHandles();
         this.updateDimensions();
         
         // Update button text based on loaded state
@@ -394,6 +433,73 @@
         this.updateSentenceButton();
         this.updateCTAButton();
         this.updateEmojiButton();
+      }
+
+      setupDragHandles() {
+        const toolbar = document.getElementById('toolbar');
+        const display = document.getElementById('display');
+        const dragToolbar = document.getElementById('drag-toolbar');
+        const dragDisplay = document.getElementById('drag-display');
+
+        // Restore saved sizes
+        const savedToolbarH = localStorage.getItem('toolbarH');
+        const savedDisplayPct = localStorage.getItem('displayPct');
+        if (savedToolbarH) toolbar.style.height = savedToolbarH + 'px';
+        if (savedDisplayPct) display.style.height = savedDisplayPct + '%';
+
+        const makeDraggable = (handle, onDrag) => {
+          let startY = 0;
+          let dragging = false;
+
+          const start = (y) => {
+            startY = y;
+            dragging = true;
+            handle.classList.add('dragging');
+            document.body.style.userSelect = 'none';
+          };
+
+          const move = (y) => {
+            if (!dragging) return;
+            const delta = y - startY;
+            startY = y;
+            onDrag(delta);
+          };
+
+          const end = () => {
+            dragging = false;
+            handle.classList.remove('dragging');
+            document.body.style.userSelect = '';
+          };
+
+          // Mouse
+          handle.addEventListener('mousedown', (e) => { e.preventDefault(); start(e.clientY); });
+          document.addEventListener('mousemove', (e) => move(e.clientY));
+          document.addEventListener('mouseup', end);
+
+          // Touch
+          handle.addEventListener('touchstart', (e) => { e.preventDefault(); start(e.touches[0].clientY); }, { passive: false });
+          document.addEventListener('touchmove', (e) => { if (dragging) { e.preventDefault(); move(e.touches[0].clientY); } }, { passive: false });
+          document.addEventListener('touchend', end);
+        };
+
+        // Handle 1: resize toolbar
+        makeDraggable(dragToolbar, (delta) => {
+          const current = toolbar.getBoundingClientRect().height;
+          const newH = Math.max(40, Math.min(window.innerHeight * 0.6, current + delta));
+          toolbar.style.height = newH + 'px';
+          localStorage.setItem('toolbarH', Math.round(newH));
+        });
+
+        // Handle 2: resize display vs input
+        makeDraggable(dragDisplay, (delta) => {
+          const container = document.getElementById('display-container');
+          const containerH = container.getBoundingClientRect().height;
+          const currentH = display.getBoundingClientRect().height;
+          const newH = Math.max(40, Math.min(containerH - 80, currentH + delta));
+          const pct = (newH / containerH) * 100;
+          display.style.height = pct + '%';
+          localStorage.setItem('displayPct', pct.toFixed(2));
+        });
       }
 
       setupEvents() {
