@@ -376,7 +376,6 @@
           if (entry.type === 'initiation') {
             text += `USER ${time}:\n${entry.probe}\n\n`;
           } else if (entry.type === 'response') {
-            // Response already has header built in - use it directly
             text += `LLM ${time}:\n${entry.probe}\n\n`;
           }
         }
@@ -399,7 +398,6 @@
         this.stack = [];
         this.localBackend = 'https://researchnexus.onrender.com';
         
-        // Load from localStorage (browser cache)
         this.modelEndpoint = localStorage.getItem('modelEndpoint') || 'https://api.x.ai';
         this.model = localStorage.getItem('model') || 'grok-4-1-fast-reasoning';
         this.accessCode = localStorage.getItem('accessCode') || '';
@@ -407,10 +405,10 @@
         this.header = localStorage.getItem('header') || '';
         this.preference = localStorage.getItem('preference') || '';
         this.truth = localStorage.getItem('truth') === 'false' ? false : true;
-        this.toxic = localStorage.getItem('toxic') || 'positive'; // New: positive, toxic, formal, humorous
-        this.sentenceCount = localStorage.getItem('sentenceCount') || 'off'; // New: off, 1, 2, 3
-        this.callToAction = localStorage.getItem('callToAction') === 'true'; // New: true/false
-        this.emojis = localStorage.getItem('emojis') === 'true'; // New: true/false
+        this.toxic = localStorage.getItem('toxic') || 'positive';
+        this.sentenceCount = localStorage.getItem('sentenceCount') || 'off';
+        this.callToAction = localStorage.getItem('callToAction') === 'true';
+        this.emojis = localStorage.getItem('emojis') === 'true';
         
         this.dotCount = 0;
         this.dotInterval = null;
@@ -427,7 +425,6 @@
         this.setupDragHandles();
         this.updateDimensions();
         
-        // Update button text based on loaded state
         this.updateToxicButton();
         this.updatePolarityButton();
         this.updateSentenceButton();
@@ -441,7 +438,6 @@
         const dragToolbar = document.getElementById('drag-toolbar');
         const dragDisplay = document.getElementById('drag-display');
 
-        // Restore saved sizes
         const savedToolbarH = localStorage.getItem('toolbarH');
         const savedDisplayPct = localStorage.getItem('displayPct');
         if (savedToolbarH) toolbar.style.height = savedToolbarH + 'px';
@@ -471,18 +467,15 @@
             document.body.style.userSelect = '';
           };
 
-          // Mouse
           handle.addEventListener('mousedown', (e) => { e.preventDefault(); start(e.clientY); });
           document.addEventListener('mousemove', (e) => move(e.clientY));
           document.addEventListener('mouseup', end);
 
-          // Touch
           handle.addEventListener('touchstart', (e) => { e.preventDefault(); start(e.touches[0].clientY); }, { passive: false });
           document.addEventListener('touchmove', (e) => { if (dragging) { e.preventDefault(); move(e.touches[0].clientY); } }, { passive: false });
           document.addEventListener('touchend', end);
         };
 
-        // Handle 1: resize toolbar
         makeDraggable(dragToolbar, (delta) => {
           const current = toolbar.getBoundingClientRect().height;
           const newH = Math.max(40, Math.min(window.innerHeight * 0.6, current + delta));
@@ -490,7 +483,6 @@
           localStorage.setItem('toolbarH', Math.round(newH));
         });
 
-        // Handle 2: resize display vs input
         makeDraggable(dragDisplay, (delta) => {
           const container = document.getElementById('display-container');
           const containerH = container.getBoundingClientRect().height;
@@ -529,7 +521,6 @@
           e.preventDefault();
           const text = (e.clipboardData || window.clipboardData).getData('text/plain');
           if (text) {
-            // Use execCommand to insert text - this triggers input event which calls normalizeInput
             document.execCommand('insertText', false, text);
           }
         });
@@ -550,13 +541,10 @@
             this.input.innerHTML = '';
             if (cmd) await this.process(cmd);
           } else if ((e.metaKey || e.ctrlKey) && (e.key === 'c' || e.key === 'C')) {
-            // Let browser handle copy normally
             return;
           } else if ((e.metaKey || e.ctrlKey) && (e.key === 'v' || e.key === 'V')) {
-            // Let browser handle paste normally
             return;
           } else if ((e.metaKey || e.ctrlKey) && (e.key === 'x' || e.key === 'X')) {
-            // Let browser handle cut normally
             return;
           } else if (['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'].includes(e.key)) {
             return;
@@ -584,7 +572,6 @@
             this.render();
             this.scrollToBottom();
           } else if (this.state === State.PROBE_RECOVER_EDIT && this.stack.length > 0) {
-            // Already in edit mode, go back one more level
             if (confirm('Go back and edit an earlier message?')) {
               if (this.stack.length > 0 && this.currentStructure.log.length > 0) {
                 if (this.stack[this.stack.length - 1].startsWith('llm:\n')) {
@@ -608,9 +595,7 @@
               this.scrollToBottom();
             }
           } else if (this.stack.length > 0) {
-            // Normal case - first time going back
             if (confirm('Go back and edit the last message?')) {
-              // Yes - go back
               if (this.stack.length > 0 && this.currentStructure.log.length > 0) {
                 if (this.stack[this.stack.length - 1].startsWith('llm:\n')) {
                   this.stack.pop();
@@ -633,7 +618,6 @@
                 this.state = State.PROBE_RECOVER;
               }
             } else {
-              // No - cancel
               this.lastInitiation = null;
               this.state = State.PROBE_RECOVER;
             }
@@ -643,7 +627,6 @@
         });
 
         document.getElementById('toxic-btn').addEventListener('click', () => {
-          // Cycle through: positive -> toxic -> formal -> humorous -> positive
           const modes = ['positive', 'formal', 'humorous'];
           const currentIndex = modes.indexOf(this.toxic);
           this.toxic = modes[(currentIndex + 1) % modes.length];
@@ -659,7 +642,6 @@
         });
 
         document.getElementById('sentence-btn').addEventListener('click', () => {
-          // Cycle through: off -> 1 -> 2 -> 3 -> off
           const counts = ['off', '1', '2', '3'];
           const currentIndex = counts.indexOf(this.sentenceCount);
           this.sentenceCount = counts[(currentIndex + 1) % counts.length];
@@ -682,7 +664,7 @@
         document.getElementById('clear-btn').addEventListener('click', () => {
           const btn = document.getElementById('clear-btn');
           this.input.innerHTML = '';
-          this.input.focus();
+          this.normalizeInput();
           btn.textContent = 'Cleared!';
           setTimeout(() => {
             btn.textContent = 'Clear';
@@ -692,15 +674,15 @@
         document.getElementById('paste-btn').addEventListener('click', async () => {
           const btn = document.getElementById('paste-btn');
           
-          // Prevent multiple clicks
           if (btn.textContent === 'Pasted!') return;
           
           try {
             const text = await navigator.clipboard.readText();
             if (text) {
-              // Focus input and use execCommand to paste - triggers normalizeInput naturally
-              this.input.focus();
-              document.execCommand('insertText', false, text);
+              const current = this.input.textContent || '';
+              const separator = current ? '\n\n' : '';
+              this.input.textContent = current + separator + text;
+              this.normalizeInput();
               
               btn.textContent = 'Pasted!';
               setTimeout(() => {
@@ -708,7 +690,6 @@
               }, 1000);
             }
           } catch (err) {
-            // Fallback for browsers that don't support clipboard API or if permission denied
             alert('Paste failed. Try using Ctrl+V / Cmd+V instead.');
           }
         });
@@ -729,10 +710,8 @@
         document.getElementById('copy-btn').addEventListener('click', () => {
           const btn = document.getElementById('copy-btn');
           
-          // Prevent multiple clicks
           if (btn.textContent === 'Copied!') return;
           
-          // Find the most recent LLM response in the stack
           let lastResponse = '';
           for (let i = this.stack.length - 1; i >= 0; i--) {
             if (this.stack[i].startsWith('llm:\n')) {
@@ -742,7 +721,6 @@
           }
           
           if (lastResponse) {
-            // Use old-school copy method that works over HTTP
             const textArea = document.createElement('textarea');
             textArea.value = lastResponse;
             textArea.style.position = 'fixed';
@@ -790,7 +768,7 @@
                   codeEl.textContent = trimmedCode;
                   codeEl.setAttribute('data-actual-code', trimmedCode);
                 }
-                this.render(); // Re-render to apply masking
+                this.render();
                 btn.textContent = 'Pasted!';
                 setTimeout(() => { btn.textContent = 'Paste Code'; }, 1000);
               }
@@ -802,26 +780,20 @@
 
         document.getElementById('pastekey-btn').addEventListener('click', async () => {
           const btn = document.getElementById('pastekey-btn');
-          
-          // Prevent multiple clicks
           if (btn.textContent === 'Pasted!') return;
-          
           try {
             const text = await navigator.clipboard.readText();
             if (text) {
               const trimmedKey = text.trim();
               if (trimmedKey) {
-                // Save the key directly
                 this.apiKey = trimmedKey;
                 localStorage.setItem('apiKey', this.apiKey);
-                
-                // Update the key field in the DOM
                 const keyEl = document.getElementById('edit-key');
                 if (keyEl) {
                   keyEl.textContent = trimmedKey;
                   keyEl.setAttribute('data-actual-key', trimmedKey);
                 }
-                this.render(); // Re-render to apply masking
+                this.render();
                 btn.textContent = 'Pasted!';
                 setTimeout(() => {
                   btn.textContent = 'Paste API Key';
@@ -958,7 +930,6 @@
             selection.addRange(range);
           }
         }
-        // Removed scrollToBottom - don't scroll display during typing
       }
 
       updateDimensions() {
@@ -970,8 +941,6 @@
         const newLineHeight = window.innerHeight / 24;
         document.body.style.fontSize = `${newFontSize}px`;
         document.body.style.lineHeight = `${newLineHeight}px`;
-        
-        // Update cursor position after font size change
         setTimeout(() => this.updateInlineCursor(), 0);
       }
 
@@ -1006,32 +975,26 @@
 
         const range = sel.getRangeAt(0);
         if (!range.collapsed) {
-          // Text is selected, hide cursor
           this.inlineCursor.style.display = 'none';
           this.input.classList.remove('has-inline-cursor');
           return;
         }
 
-        // Get cursor position in text
         const preCaretRange = range.cloneRange();
         preCaretRange.selectNodeContents(this.input);
         preCaretRange.setEnd(range.endContainer, range.endOffset);
         const caretOffset = preCaretRange.toString().length;
         const totalLength = this.input.textContent.length;
         
-        // Check if at the very end
         if (caretOffset === totalLength) {
-          // At end - ::after will show, hide inline cursor
           this.inlineCursor.style.display = 'none';
           this.input.classList.remove('has-inline-cursor');
           return;
         }
 
-        // Not at end - show inline cursor at exact position, hide ::after
         const rect = range.getBoundingClientRect();
         const containerRect = document.getElementById('display-container').getBoundingClientRect();
         
-        // Adjust vertical position - move cursor down slightly to align with text baseline
         const computedStyle = getComputedStyle(this.input);
         const fontSize = parseFloat(computedStyle.fontSize);
         const lineHeight = parseFloat(computedStyle.lineHeight);
@@ -1058,7 +1021,6 @@
             return '<span class="reverse-video">post:</span>\n' + probe + '<div class="message-separator"></div>';
           } else if (line.startsWith('llm:\n')) {
             const response = line.slice('llm:\n'.length);
-            // Response already has header built in - don't add it again
             return '<span class="reverse-video">reply:</span>\n' + response + '<div class="message-separator"></div>';
           }
           return line;
@@ -1083,23 +1045,19 @@
             alert(data.message || 'Invalid or expired code.\nPurchase a new code at ko-fi.com/researchkofi');
             return false;
           }
-          // Warn when 5 or fewer days remain (skip for family code)
           if (data.days_left !== 9999 && data.days_left <= 5) {
             alert(`Your access code expires in ${data.days_left} day(s).\nPurchase a new code soon at ko-fi.com/researchkofi`);
           }
           return true;
         } catch (e) {
-          // Network failure - fail open so users aren't locked out by a server hiccup
           console.warn('Code validation network error:', e);
           return true;
         }
       }
 
       async coordinate(probe) {
-        // Validate access code before every request
         const isValid = await this.validateCode();
         if (!isValid) {
-          // Pop the user entry that was already pushed before this call
           if (this.stack.length > 0 && this.stack[this.stack.length - 1] === `user:\n${probe}`) {
             this.stack.pop();
           }
@@ -1164,20 +1122,17 @@
             const chunk = new TextDecoder().decode(value);
             
             if (!hasAddedHeader) {
-              // First chunk - prepend header once
               const firstContent = this.header ? this.header + chunk : chunk;
               this.stack.push(`llm:\n${firstContent}`);
               hasAddedHeader = true;
             } else {
-              // Subsequent chunks - just append (no header)
               this.stack[this.stack.length - 1] += chunk;
             }
 
             this.render();
-            this.scrollToBottom(); // Scroll display during streaming
+            this.scrollToBottom();
           }
 
-          // Extract complete response (with header) from stack
           const completeResponse = this.stack[this.stack.length - 1].slice('llm:\n'.length);
           this.currentStructure.addResponse(completeResponse);
 
@@ -1195,7 +1150,6 @@
         const headerEl = document.getElementById('edit-header');
         const preferenceEl = document.getElementById('edit-preference');
         
-        // Preserve current values from DOM if they exist
         let currentEndpoint = this.modelEndpoint;
         let currentModel = this.model;
         let currentCodeDisplay = '';
@@ -1215,35 +1169,27 @@
         }
         if (codeEl && !this.codeFieldBeingEdited) {
           const codeText = codeEl.textContent.trim();
-          // Only update accessCode if it's NOT bullets (meaning user edited it)
           if (!codeText.match(/^•+$/) && codeText !== 'NULL' && codeText !== '') {
             this.accessCode = codeText;
             localStorage.setItem('accessCode', this.accessCode);
           }
-          // Show masked code or NULL
           currentCodeDisplay = (this.accessCode && this.accessCode !== 'NULL' && this.accessCode !== '') ? '•'.repeat(this.accessCode.length) : 'NULL';
         } else if (codeEl) {
-          // Keep whatever is currently displayed while editing
           currentCodeDisplay = codeEl.textContent;
         } else {
-          // First render
           currentCodeDisplay = (this.accessCode && this.accessCode !== 'NULL' && this.accessCode !== '') ? '•'.repeat(this.accessCode.length) : 'NULL';
         }
         
         if (keyEl && !this.keyFieldBeingEdited) {
           const keyText = keyEl.textContent.trim();
-          // Only update apiKey if it's NOT bullets (meaning user edited it)
           if (!keyText.match(/^•+$/) && keyText !== 'NULL' && keyText !== '') {
             this.apiKey = keyText;
             localStorage.setItem('apiKey', this.apiKey);
           }
-          // Show masked key or NULL
           currentKeyDisplay = (this.apiKey && this.apiKey !== 'NULL' && this.apiKey !== '') ? '•'.repeat(this.apiKey.length) : 'NULL';
         } else if (keyEl) {
-          // Keep whatever is currently displayed while editing
           currentKeyDisplay = keyEl.textContent;
         } else {
-          // First render
           currentKeyDisplay = (this.apiKey && this.apiKey !== 'NULL' && this.apiKey !== '') ? '•'.repeat(this.apiKey.length) : 'NULL';
         }
         
@@ -1311,7 +1257,6 @@
 
         this.display.innerHTML = output;
         
-        // Set masked code text content after HTML is rendered to preserve whitespace
         if (!this.codeFieldBeingEdited) {
           const codeElAfterRender = document.getElementById('edit-code');
           if (codeElAfterRender) {
@@ -1320,7 +1265,6 @@
           }
         }
         
-        // Set masked key text content after HTML is rendered to preserve whitespace
         if (!this.keyFieldBeingEdited) {
           const keyElAfterRender = document.getElementById('edit-key');
           if (keyElAfterRender) {
@@ -1331,7 +1275,6 @@
         
         this.input.contentEditable = !blockInput;
         if (!blockInput) {
-          // If in edit mode, populate with lastInitiation in reverse video
           if (this.state === State.PROBE_RECOVER_EDIT && this.lastInitiation) {
             const span = document.createElement('span');
             span.className = 'input-reverse';
@@ -1341,9 +1284,6 @@
           } else {
             this.input.textContent = '';
           }
-          // Removed auto-scroll - only scroll during LLM streaming
-        } else {
-          // Don't auto-scroll here either
         }
       }
 
@@ -1364,9 +1304,7 @@
                 this.lastActionWasFileDrop = false;
                 this.state = State.PROBE_RECOVER;
               } else if (this.stack.length > 0) {
-                // Show confirm dialog
                 if (confirm('Go back and edit the last message?')) {
-                  // Yes - go back
                   if (this.stack.length > 0 && this.currentStructure.log.length > 0) {
                     if (this.stack[this.stack.length - 1].startsWith('llm:\n')) {
                       this.stack.pop();
@@ -1389,7 +1327,6 @@
                     this.state = State.PROBE_RECOVER;
                   }
                 } else {
-                  // No - cancel
                   this.lastInitiation = null;
                   this.state = State.PROBE_RECOVER;
                 }
@@ -1418,7 +1355,7 @@
               this.currentProbe = cmd;
               const response = await this.coordinate(cmd);
               this.stopWait();
-              if (response === null) break; // validation failed, state already reset
+              if (response === null) break;
               this.state = State.PROBE_RECOVER_RESPONSE;
               this.lastInitiation = null;
             }
@@ -1464,7 +1401,7 @@
               this.currentProbe = cmd;
               const response = await this.coordinate(cmd);
               this.stopWait();
-              if (response === null) break; // validation failed, state already reset
+              if (response === null) break;
               this.state = State.PROBE_RECOVER_RESPONSE;
               this.lastInitiation = null;
             }
