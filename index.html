@@ -405,9 +405,9 @@
         this.accessCode = localStorage.getItem('accessCode') || '';
         this.apiKey = localStorage.getItem('apiKey') || '';
         this.header = localStorage.getItem('header') || '';
-        this.preference = localStorage.getItem('preference') || null;
+        this.preference = localStorage.getItem('preference') || '';
         this.truth = localStorage.getItem('truth') === 'false' ? false : true;
-        this.toxic = (['positive','formal','humorous'].includes(localStorage.getItem('toxic'))) ? localStorage.getItem('toxic') : 'positive';
+        this.toxic = localStorage.getItem('toxic') || 'positive'; // New: positive, toxic, formal, humorous
         this.sentenceCount = localStorage.getItem('sentenceCount') || 'off'; // New: off, 1, 2, 3
         this.callToAction = localStorage.getItem('callToAction') === 'true'; // New: true/false
         this.emojis = localStorage.getItem('emojis') === 'true'; // New: true/false
@@ -423,7 +423,6 @@
         this.lastActionWasFileDrop = false;
         this.keyFieldBeingEdited = false;
         this.codeFieldBeingEdited = false;
-        this.preferenceFieldBeingEdited = false;
         this.setupEvents();
         this.setupDragHandles();
         this.updateDimensions();
@@ -645,7 +644,7 @@
 
         document.getElementById('toxic-btn').addEventListener('click', () => {
           // Cycle through: positive -> toxic -> formal -> humorous -> positive
-          const modes = ['positive', 'formal', 'humorous'];
+          const modes = ['positive', 'toxic', 'formal', 'humorous'];
           const currentIndex = modes.indexOf(this.toxic);
           this.toxic = modes[(currentIndex + 1) % modes.length];
           this.updateToxicButton();
@@ -848,8 +847,6 @@
             const sel = window.getSelection();
             sel.removeAllRanges();
             sel.addRange(range);
-          } else if (e.target.id === 'edit-preference') {
-            this.preferenceFieldBeingEdited = true;
           } else if (e.target.id === 'edit-code') {
             this.codeFieldBeingEdited = true;
             const codeText = e.target.textContent.trim();
@@ -873,9 +870,6 @@
           } else if (e.target.id === 'edit-code') {
             this.codeFieldBeingEdited = false;
             this.render();
-          } else if (e.target.id === 'edit-preference') {
-            this.preferenceFieldBeingEdited = false;
-            this.render();
           }
         }, true);
       }
@@ -884,6 +878,7 @@
         const btn = document.getElementById('toxic-btn');
         const labels = {
           'positive': 'Positive',
+          'toxic': 'Toxic',
           'formal': 'Formal',
           'humorous': 'Humorous'
         };
@@ -1209,7 +1204,7 @@
           localStorage.setItem('model', this.model);
         }
         if (codeEl && !this.codeFieldBeingEdited) {
-          const codeText = codeEl.textContent.replace(/\s+/g, '');
+          const codeText = codeEl.textContent.trim();
           // Only update accessCode if it's NOT bullets (meaning user edited it)
           if (!codeText.match(/^•+$/) && codeText !== 'NULL' && codeText !== '') {
             this.accessCode = codeText;
@@ -1226,7 +1221,7 @@
         }
         
         if (keyEl && !this.keyFieldBeingEdited) {
-          const keyText = keyEl.textContent.replace(/\s+/g, '');
+          const keyText = keyEl.textContent.trim();
           // Only update apiKey if it's NOT bullets (meaning user edited it)
           if (!keyText.match(/^•+$/) && keyText !== 'NULL' && keyText !== '') {
             this.apiKey = keyText;
@@ -1250,17 +1245,10 @@
             localStorage.setItem('header', this.header);
           }
         }
-        if (preferenceEl && !this.preferenceFieldBeingEdited) {
-          const prefText = preferenceEl.textContent.trim();
-          if (prefText !== 'NULL' && prefText !== '') {
-            currentPreference = prefText;
-            this.preference = currentPreference;
-            localStorage.setItem('preference', this.preference);
-          } else if (prefText === '' || prefText === 'NULL') {
-            this.preference = null;
-            currentPreference = null;
-            localStorage.removeItem('preference');
-          }
+        if (preferenceEl && preferenceEl.textContent.trim() !== 'NULL') {
+          currentPreference = preferenceEl.textContent.trim();
+          this.preference = currentPreference;
+          localStorage.setItem('preference', this.preference);
         }
 
         let output = '';
