@@ -864,12 +864,23 @@
         }, true);
 
         this.display.addEventListener('blur', (e) => {
+          if (e.target.id === 'edit-preference') {
+            if (e.target.textContent.trim() === '') {
+              e.target.textContent = 'NULL';
+              this.preference = '';
+              localStorage.removeItem('preference');
+            }
+          }
           if (e.target.id === 'edit-key') {
             this.keyFieldBeingEdited = false;
+            const saved = this.input.innerHTML;
             this.render();
+            this.input.innerHTML = saved;
           } else if (e.target.id === 'edit-code') {
             this.codeFieldBeingEdited = false;
+            const saved = this.input.innerHTML;
             this.render();
+            this.input.innerHTML = saved;
           }
         }, true);
       }
@@ -1244,17 +1255,10 @@
             localStorage.setItem('header', this.header);
           }
         }
-        if (preferenceEl) {
-          const prefText = preferenceEl.textContent.trim();
-          if (prefText !== 'NULL' && prefText !== '') {
-            currentPreference = prefText;
-            this.preference = currentPreference;
-            localStorage.setItem('preference', this.preference);
-          } else {
-            this.preference = '';
-            currentPreference = '';
-            localStorage.removeItem('preference');
-          }
+        if (preferenceEl && preferenceEl.textContent.trim() !== 'NULL') {
+          currentPreference = preferenceEl.textContent.trim();
+          this.preference = currentPreference;
+          localStorage.setItem('preference', this.preference);
         }
 
         let output = '';
