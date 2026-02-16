@@ -1206,7 +1206,9 @@
 
             if (cleaned) {
               if (!hasAddedHeader) {
-                const firstContent = this.header ? this.header + cleaned : cleaned;
+                // Strip any leading punctuation/symbols the LLM outputs before the first word
+                const strippedCleaned = cleaned.replace(/^[^a-zA-Z0-9\u0400-\u04FF\n@#]+/, '');
+                const firstContent = this.header ? this.header + strippedCleaned : strippedCleaned;
                 this.stack.push(`llm:\n${firstContent}`);
                 hasAddedHeader = true;
               } else {
