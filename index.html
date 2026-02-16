@@ -1115,22 +1115,49 @@
           const reader = response.body.getReader();
           let hasAddedHeader = false;
 
+          // Clean LLM output as it streams:
+          //   - strip all ** (bold markers)
+          //   - replace em dash (—) with two real newlines
+          //   - collapse 3+ consecutive newlines back to 2
+          // carry holds the tail of the previous chunk so em dashes or **
+          // that straddle a chunk boundary are still caught.
+          const cleanChunk = (text) => {
+            text = text.replace(/\*\*/g, '');
+            text = text.replace(/\u2014/g, '\n\n');
+            text = text.replace(/\n{3,}/g, '\n\n');
+            return text;
+          };
+          let carry = '';
+
           while (true) {
             const { done, value } = await reader.read();
-            if (done) break;
 
-            const chunk = new TextDecoder().decode(value);
-            
-            if (!hasAddedHeader) {
-              const firstContent = this.header ? this.header + chunk : chunk;
-              this.stack.push(`llm:\n${firstContent}`);
-              hasAddedHeader = true;
+            let cleaned = '';
+            if (!done) {
+              const raw = carry + new TextDecoder().decode(value);
+              // Hold back last 3 chars in case ** or em dash straddles boundary
+              const safe = raw.length > 3 ? raw.slice(0, -3) : '';
+              carry      = raw.length > 3 ? raw.slice(-3)    : raw;
+              cleaned = cleanChunk(safe);
             } else {
-              this.stack[this.stack.length - 1] += chunk;
+              // Flush carry on stream end
+              cleaned = cleanChunk(carry);
+              carry = '';
             }
 
-            this.render();
-            this.scrollToBottom();
+            if (cleaned) {
+              if (!hasAddedHeader) {
+                const firstContent = this.header ? this.header + cleaned : cleaned;
+                this.stack.push(`llm:\n${firstContent}`);
+                hasAddedHeader = true;
+              } else {
+                this.stack[this.stack.length - 1] += cleaned;
+              }
+              this.render();
+              this.scrollToBottom();
+            }
+
+            if (done) break;
           }
 
           const completeResponse = this.stack[this.stack.length - 1].slice('llm:\n'.length);
