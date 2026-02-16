@@ -1126,7 +1126,7 @@
           // ** / em dash / \n\n / the first letter after a break can't be
           // split across two chunks and missed.
           // ─────────────────────────────────────────────────────────────────
-          const PUNCT = /[.!?,;:\u2026]$/;
+          const PUNCT = /[^a-zA-Z0-9\u0400-\u04FF]$/;  // any non-alphanumeric = already terminated
 
           const cleanChunk = (text) => {
             text = text.replace(/\*\*/g, '');
