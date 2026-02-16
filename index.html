@@ -1132,8 +1132,8 @@
             text = text.replace(/\*\*/g, '');
             text = text.replace(/\u2014/g, '\n\n');
             text = text.replace(/\n{3,}/g, '\n\n');
-            text = text.replace(/ - /g, ' ');    // separator dash (space both sides) → single space
-            text = text.replace(/-/g, ' ');        // hyphenated word → replace dash with space
+            text = text.replace(/ [-\u2013] /g, ' ');  // separator dash or en dash (space both sides) → single space
+            text = text.replace(/[-\u2013]/g, ' ');  // hyphenated word or bare en dash → replace with space
             return text;
           };
 
