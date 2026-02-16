@@ -1115,18 +1115,75 @@
           const reader = response.body.getReader();
           let hasAddedHeader = false;
 
-          // Clean LLM output as it streams:
-          //   - strip all ** (bold markers)
-          //   - replace em dash (—) with two real newlines
-          //   - collapse 3+ consecutive newlines back to 2
-          // carry holds the tail of the previous chunk so em dashes or **
-          // that straddle a chunk boundary are still caught.
+          // ── Output cleaning ───────────────────────────────────────────────
+          // cleanChunk: strip **, replace em dash with \n\n, collapse 3+ newlines.
+          // autoFormat: after a \n\n, ensure the preceding sentence ends with
+          //   a period (adds one if the last non-space char isn't punctuation)
+          //   and capitalizes the very first letter that follows the break.
+          //   Works across chunk boundaries via a persistent `pendingCap` flag.
+          //
+          // Carry buffer (last 6 chars held back each chunk) ensures that
+          // ** / em dash / \n\n / the first letter after a break can't be
+          // split across two chunks and missed.
+          // ─────────────────────────────────────────────────────────────────
+          const PUNCT = /[.!?,;:\u2026]$/;
+
           const cleanChunk = (text) => {
             text = text.replace(/\*\*/g, '');
             text = text.replace(/\u2014/g, '\n\n');
             text = text.replace(/\n{3,}/g, '\n\n');
             return text;
           };
+
+          // Receives already-cleaned text plus a mutable state object.
+          // Returns the formatted text and updates state in place.
+          const autoFormat = (text, state) => {
+            let out = '';
+            let i = 0;
+            while (i < text.length) {
+              const ch = text[i];
+
+              if (state.pendingCap) {
+                // Looking for the first letter/emoji to capitalize after a break
+                if (ch === '\n' || ch === ' ') {
+                  // still whitespace — pass through, keep waiting
+                  out += ch;
+                  i++;
+                  continue;
+                }
+                // First non-whitespace character after the break
+                if (/[a-z]/.test(ch)) {
+                  out += ch.toUpperCase();
+                } else {
+                  out += ch;
+                }
+                state.pendingCap = false;
+                i++;
+                continue;
+              }
+
+              // Detect \n\n — sentence boundary
+              if (ch === '\n' && i + 1 < text.length && text[i + 1] === '\n') {
+                // Add period before the break if sentence didn't end in punctuation
+                const trimmed = out.trimEnd();
+                if (trimmed.length > 0 && !PUNCT.test(trimmed)) {
+                  // Replace trailing whitespace with period + whitespace
+                  out = trimmed + '.';
+                }
+                out += '\n\n';
+                state.pendingCap = true;
+                i += 2;
+                continue;
+              }
+
+              out += ch;
+              i++;
+            }
+            return out;
+          };
+
+          // formatState persists pendingCap across chunks
+          const formatState = { pendingCap: false };
           let carry = '';
 
           while (true) {
@@ -1135,13 +1192,13 @@
             let cleaned = '';
             if (!done) {
               const raw = carry + new TextDecoder().decode(value);
-              // Hold back last 3 chars in case ** or em dash straddles boundary
-              const safe = raw.length > 3 ? raw.slice(0, -3) : '';
-              carry      = raw.length > 3 ? raw.slice(-3)    : raw;
-              cleaned = cleanChunk(safe);
+              // Hold back last 6 chars: covers \n\n + next letter across boundary
+              const safe = raw.length > 6 ? raw.slice(0, -6) : '';
+              carry      = raw.length > 6 ? raw.slice(-6)    : raw;
+              cleaned = autoFormat(cleanChunk(safe), formatState);
             } else {
               // Flush carry on stream end
-              cleaned = cleanChunk(carry);
+              cleaned = autoFormat(cleanChunk(carry), formatState);
               carry = '';
             }
 
