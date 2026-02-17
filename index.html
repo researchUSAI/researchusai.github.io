@@ -1130,6 +1130,7 @@
 
           const cleanChunk = (text) => {
             text = text.replace(/\*\*/g, '');
+            text = text.replace(/(@\w+)\s*[\u2013\u2014]\s*/g, '$1 ');  // @username— or @username– → just @username + space, no period/break
             text = text.replace(/\u2014/g, '\n\n');
             text = text.replace(/\n{3,}/g, '\n\n');
             text = text.replace(/ [-\u2013] /g, ' ');  // separator dash or en dash (space both sides) → single space
