@@ -1313,13 +1313,13 @@
         let blockInput = false;
 
         output += '<span class="reverse-video">code:</span> <span id="edit-code" class="config-value" contenteditable="true" data-actual-code="' + (this.accessCode || '') + '">' + currentCodeDisplay + '</span>\n';
+        output += '<span class="reverse-video">api key:</span> <span id="edit-key" class="config-value" contenteditable="true" data-actual-key="' + (this.apiKey || '') + '">' + currentKeyDisplay + '</span>\n';
         output += '<span class="reverse-video">endpoint:</span> <span id="edit-endpoint" class="config-value" contenteditable="true">' + (currentEndpoint || 'https://api.x.ai') + '</span>\n';
         output += '<span class="reverse-video">model:</span> <span id="edit-model" class="config-value" contenteditable="true">' + (currentModel || 'grok-4-1-fast-reasoning') + '</span>\n';
-        output += '<span class="reverse-video">api key:</span> <span id="edit-key" class="config-value" contenteditable="true" data-actual-key="' + (this.apiKey || '') + '">' + currentKeyDisplay + '</span>\n';
         const headerDisplay = currentHeader || 'NULL';
         const headerAttr = (currentHeader || '').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
-        output += '<span class="reverse-video">header:</span> <span id="edit-header" class="config-value" contenteditable="true" data-raw-header="' + headerAttr + '">' + headerDisplay + '</span>\n';
-        output += '<span class="reverse-video">preference:</span> <span id="edit-preference" class="config-value" contenteditable="true">' + (currentPreference || 'NULL') + '</span>\n';
+        output += '<span class="reverse-video">heading:</span> <span id="edit-header" class="config-value" contenteditable="true" data-raw-header="' + headerAttr + '">' + headerDisplay + '</span>\n';
+        output += '<span class="reverse-video">voice:</span> <span id="edit-preference" class="config-value" contenteditable="true">' + (currentPreference || 'NULL') + '</span>\n';
         output += '<div class="message-separator"></div>';
 
         switch(this.state) {
