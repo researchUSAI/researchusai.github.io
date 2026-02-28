@@ -835,6 +835,23 @@
           }
         }, true);
 
+        this.display.addEventListener('input', (e) => {
+          if (e.target.id === 'edit-preference') {
+            const val = e.target.textContent.trim();
+            if (val && val !== 'NULL') {
+              this.preference = val;
+              localStorage.setItem('preference', val);
+            }
+          }
+          if (e.target.id === 'edit-header') {
+            const val = e.target.textContent.trim();
+            if (val && val !== 'NULL') {
+              this.header = val;
+              localStorage.setItem('header', val);
+            }
+          }
+        }, true);
+
         this.display.addEventListener('blur', (e) => {
           if (e.target.id === 'edit-preference') {
             const val = e.target.textContent.trim();
@@ -1201,7 +1218,21 @@
                 out += ' ';
                 state.pendingCap = true;
                 i += 2;
-                // Skip any further leading whitespace/newlines so we land on the first real char
+                while (i < text.length && (text[i] === '\n' || text[i] === ' ')) i++;
+                continue;
+              }
+
+              // Detect single \n — same treatment, period+space+cap
+              if (ch === '\n') {
+                const trimmed = out.trimEnd();
+                if (trimmed.length > 0 && !PUNCT.test(trimmed)) {
+                  out = trimmed + '.';
+                } else if (trimmed.length > 0) {
+                  out = trimmed;
+                }
+                out += ' ';
+                state.pendingCap = true;
+                i++;
                 while (i < text.length && (text[i] === '\n' || text[i] === ' ')) i++;
                 continue;
               }
