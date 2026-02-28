@@ -837,10 +837,24 @@
 
         this.display.addEventListener('blur', (e) => {
           if (e.target.id === 'edit-preference') {
-            if (e.target.textContent.trim() === '') {
+            const val = e.target.textContent.trim();
+            if (val === '' || val === 'NULL') {
               e.target.textContent = 'NULL';
               this.preference = '';
               localStorage.removeItem('preference');
+            } else {
+              this.preference = val;
+              localStorage.setItem('preference', val);
+            }
+          }
+          if (e.target.id === 'edit-header') {
+            const val = e.target.textContent.trim();
+            if (val === '' || val === 'NULL') {
+              this.header = '';
+              localStorage.removeItem('header');
+            } else {
+              this.header = val;
+              localStorage.setItem('header', val);
             }
           }
           if (e.target.id === 'edit-key') {
