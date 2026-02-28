@@ -1153,9 +1153,10 @@
           //   and capitalizes the very first letter that follows the break.
           //   Works across chunk boundaries via a persistent `pendingCap` flag.
           //
-          // Carry buffer (last 6 chars held back each chunk) ensures that
-          // ** / em dash / \n\n / the first letter after a break can't be
+          // Carry buffer (last 20 chars held back each chunk) ensures that
+          // ** / em dash / \n\n / period+emoji sequences can't be
           // split across two chunks and missed.
+          // 20 chars covers: period + space + flag emoji (8 bytes) + modifier sequences
           // ─────────────────────────────────────────────────────────────────
           const PUNCT = /[^a-zA-Z0-9\u0400-\u04FF]$/;  // any non-alphanumeric = already terminated
 
@@ -1255,9 +1256,9 @@
             let cleaned = '';
             if (!done) {
               const raw = carry + new TextDecoder().decode(value);
-              // Hold back last 6 chars: covers \n\n + next letter across boundary
-              const safe = raw.length > 6 ? raw.slice(0, -6) : '';
-              carry      = raw.length > 6 ? raw.slice(-6)    : raw;
+              // Hold back last 20 chars: covers period + emoji across boundary
+              const safe = raw.length > 20 ? raw.slice(0, -20) : '';
+              carry      = raw.length > 20 ? raw.slice(-20)    : raw;
               cleaned = autoFormat(cleanChunk(safe), formatState);
             } else {
               // Flush carry on stream end
