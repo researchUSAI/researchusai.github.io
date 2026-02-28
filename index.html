@@ -1165,7 +1165,8 @@
             text = text.replace(/\u2014/g, '\x01');  // em dash → sentinel for period+cap+space in autoFormat
             text = text.replace(/\n{3,}/g, '\n\n');
             text = text.replace(/ [-\u2013] /g, '\x01');  // separator dash or en dash (space both sides) → sentinel (period+cap)
-            text = text.replace(/(?<!\d)[-\u2013](?!\d)|(?<=\d)[-\u2013](?!\d)|(?<!\d)[-\u2013](?=\d)/g, '\x01');  // other non-numeric dashes → sentinel
+            text = text.replace(/(?<=\w)[-](?=\w)/g, ' ');  // hyphen bound between word chars → space (Mar-A-Lago → Mar A Lago)
+            text = text.replace(/(?<!\d)\u2013(?!\d)/g, '\x01');  // en dash (non-numeric) → sentinel (period+cap)
             return text;
           };
 
