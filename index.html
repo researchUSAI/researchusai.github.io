@@ -1165,8 +1165,10 @@
             text = text.replace(/(@\w+)\s*[\u2013\u2014]\s*/g, '$1 ');  // @username— or @username– → just @username + space, no period/break
             text = text.replace(/\u2014/g, '\x01');  // em dash → sentinel for period+cap+space in autoFormat
             text = text.replace(/\n{3,}/g, '\n\n');
-            text = text.replace(/ [-\u2013] /g, '\x01');  // separator dash or en dash (space both sides) → sentinel (period+cap)
-            text = text.replace(/(?<=\w)[-](?=\w)/g, ' ');  // hyphen bound between word chars → space (Mar-A-Lago → Mar A Lago)
+            text = text.replace(/ [-\u2013] /g, '\x01');  // word - word (space both sides) → sentinel
+            text = text.replace(/(?<=[a-zA-Z])[-\u2013](?= )/g, '\x01');  // word- word (dash then space) → sentinel
+            text = text.replace(/(?<= )[-\u2013](?=[a-zA-Z])/g, '\x01');  // word -word (space then dash) → sentinel
+            text = text.replace(/(?<=[a-zA-Z_])[-\u2010\u2011\u2012\u2013\u2014\u2015\u2212](?=[a-zA-Z_])/g, ' ');  // letter-dash-letter → space (Mar-a-Lago → Mar a Lago), never touches digit-digit
             text = text.replace(/(?<!\d)\u2013(?!\d)/g, '\x01');  // en dash (non-numeric) → sentinel (period+cap)
             text = text.replace(/\.(\s*[\u{1F000}-\u{1FFFF}\u{2600}-\u{27BF}\u{FE00}-\u{FE0F}\u{200D}\u{20E3}\u{E0020}-\u{E007F}]+)/gu, '$1');  // strip period before emojis
             return text;
