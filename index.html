@@ -1133,8 +1133,8 @@
             text = text.replace(/(@\w+)\s*[\u2013\u2014]\s*/g, '$1 ');  // @username— or @username– → just @username + space, no period/break
             text = text.replace(/\u2014/g, '\x01');  // em dash → sentinel for period+cap+space in autoFormat
             text = text.replace(/\n{3,}/g, '\n\n');
-            text = text.replace(/ [-\u2013] /g, ' ');  // separator dash or en dash (space both sides) → single space
-            text = text.replace(/(?<!\d)[-\u2013](?!\d)|(?<=\d)[-\u2013](?!\d)|(?<!\d)[-\u2013](?=\d)/g, ' ');  // strip dashes except digit-dash-digit (e.g. 1980-90)
+            text = text.replace(/ [-\u2013] /g, '\x01');  // separator dash or en dash (space both sides) → sentinel (period+cap)
+            text = text.replace(/(?<!\d)[-\u2013](?!\d)|(?<=\d)[-\u2013](?!\d)|(?<!\d)[-\u2013](?=\d)/g, '\x01');  // other non-numeric dashes → sentinel
             return text;
           };
 
@@ -1147,10 +1147,9 @@
               const ch = text[i];
 
               if (state.pendingCap) {
-                // Looking for the first letter/emoji to capitalize after a break
+                // Looking for the first letter/emoji to capitalize after a break — swallow whitespace
                 if (ch === '\n' || ch === ' ') {
-                  // still whitespace — pass through, keep waiting
-                  out += ch;
+                  // absorb — we already emitted a space before the break
                   i++;
                   continue;
                 }
@@ -1177,17 +1176,19 @@
                 continue;
               }
 
-              // Detect \n\n — sentence boundary
+              // Detect \n\n — sentence boundary: collapse to ". " + capitalize next letter (no line break)
               if (ch === '\n' && i + 1 < text.length && text[i + 1] === '\n') {
-                // Add period before the break if sentence didn't end in punctuation
                 const trimmed = out.trimEnd();
                 if (trimmed.length > 0 && !PUNCT.test(trimmed)) {
-                  // Replace trailing whitespace with period + whitespace
                   out = trimmed + '.';
+                } else if (trimmed.length > 0) {
+                  out = trimmed;
                 }
-                out += '\n\n';
+                out += ' ';
                 state.pendingCap = true;
                 i += 2;
+                // Skip any further leading whitespace/newlines so we land on the first real char
+                while (i < text.length && (text[i] === '\n' || text[i] === ' ')) i++;
                 continue;
               }
 
