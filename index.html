@@ -1200,13 +1200,13 @@
                 continue;
               }
 
-              // Detect \x01 (em dash sentinel) — period + capitalize, but just a space not a line break
+              // Detect \x01 (em dash sentinel) — period + \n\n + capitalize next letter
               if (ch === '\x01') {
                 const trimmed = out.trimEnd();
                 if (trimmed.length > 0 && !PUNCT.test(trimmed)) {
                   out = trimmed + '.';
                 }
-                out += ' ';
+                out += '\n\n';
                 state.pendingCap = true;
                 i++;
                 continue;
