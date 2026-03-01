@@ -1052,7 +1052,8 @@
             return '<span class="reverse-video">post:</span>\n' + probe + '<div class="message-separator"></div>';
           } else if (line.startsWith('llm:\n')) {
             const response = line.slice('llm:\n'.length);
-            return '<span class="reverse-video">reply:</span>\n' + response + '<div class="message-separator"></div>';
+            const htmlResponse = response.replace(/\n\n/g, '<br><br>').replace(/\n/g, '<br>');
+            return '<span class="reverse-video">reply:</span>\n' + htmlResponse + '<div class="message-separator"></div>';
           }
           return line;
         }).join('');
@@ -1212,7 +1213,7 @@
                 continue;
               }
 
-              // Detect \n\n — sentence boundary: collapse to ". " + capitalize next letter (no line break)
+              // Detect \n\n — preserve as line break + capitalize next letter
               if (ch === '\n' && i + 1 < text.length && text[i + 1] === '\n') {
                 const trimmed = out.trimEnd();
                 if (trimmed.length > 0 && !PUNCT.test(trimmed)) {
@@ -1220,14 +1221,14 @@
                 } else if (trimmed.length > 0) {
                   out = trimmed;
                 }
-                out += ' ';
+                out += '\n\n';
                 state.pendingCap = true;
                 i += 2;
-                while (i < text.length && (text[i] === '\n' || text[i] === ' ')) i++;
+                while (i < text.length && text[i] === '\n') i++;
                 continue;
               }
 
-              // Detect single \n — same treatment, period+space+cap
+              // Detect single \n — preserve as line break + capitalize next letter
               if (ch === '\n') {
                 const trimmed = out.trimEnd();
                 if (trimmed.length > 0 && !PUNCT.test(trimmed)) {
@@ -1235,10 +1236,10 @@
                 } else if (trimmed.length > 0) {
                   out = trimmed;
                 }
-                out += ' ';
+                out += '\n\n';
                 state.pendingCap = true;
                 i++;
-                while (i < text.length && (text[i] === '\n' || text[i] === ' ')) i++;
+                while (i < text.length && text[i] === '\n') i++;
                 continue;
               }
 
