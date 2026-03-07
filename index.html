@@ -164,9 +164,7 @@
       font-weight: bold;
       animation: glow-pulse 2s infinite;
     }
-    #toxic-btn {
-      background: linear-gradient(145deg, #3a3a3a, #4a4a4a);
-    }
+
     #display-container {
       flex: 1 1 auto;
       min-height: 0;
@@ -253,7 +251,19 @@
         0 0 5px rgba(189, 206, 241, 0.2),
         inset 0 0 5px rgba(189, 206, 241, 0.1);
     }
-    .message-separator {
+    .config-value.placeholder {
+      color: rgba(189, 206, 241, 0.35);
+      font-style: italic;
+      text-shadow: none;
+    }
+    .default-tag {
+      color: rgba(189, 206, 241, 0.35);
+      font-style: italic;
+      text-shadow: none;
+      pointer-events: none;
+      user-select: none;
+      margin-left: 0.5ch;
+    }
       height: 1em;
     }
     /* Scrollbar styling */
@@ -308,16 +318,13 @@
 <body>
   <div id="toolbar">
     <div id="toolbar-row-1">
-      <button id="support-btn">Get Code</button>
-      <button id="getkey-btn">Get API Key</button>
-      <button id="pastecode-btn">Paste Code</button>
-      <button id="pastekey-btn">Paste API Key</button>
       <button id="export-btn">Export</button>
+      <button id="support-btn">Get Code</button>
+      <button id="pastecode-btn">Paste Code</button>
+      <button id="getkey-btn">Get API Key</button>
+      <button id="pastekey-btn">Paste API Key</button>
       <button id="polarity-btn">Short Form</button>
-      <button id="sentence-btn">OFF</button>
-      <button id="cta-btn">Call to Action: NO</button>
-      <button id="emoji-btn">Emojis: NO</button>
-      <button id="toxic-btn">Positive</button>
+
       <button id="back-btn">Back</button>
       <button id="clear-btn">Clear</button>
       <button id="paste-btn">Paste</button>
@@ -405,10 +412,6 @@
         this.header = localStorage.getItem('header') || '';
         this.preference = localStorage.getItem('preference') || '';
         this.truth = localStorage.getItem('truth') === 'false' ? false : true;
-        this.toxic = localStorage.getItem('toxic') || 'positive';
-        this.sentenceCount = localStorage.getItem('sentenceCount') || 'off';
-        this.callToAction = localStorage.getItem('callToAction') === 'true';
-        this.emojis = localStorage.getItem('emojis') === 'true';
         
         this.dotCount = 0;
         this.dotInterval = null;
@@ -425,11 +428,7 @@
         this.setupDragHandles();
         this.updateDimensions();
         
-        this.updateToxicButton();
         this.updatePolarityButton();
-        this.updateSentenceButton();
-        this.updateCTAButton();
-        this.updateEmojiButton();
       }
 
       setupDragHandles() {
@@ -626,13 +625,6 @@
           }
         });
 
-        document.getElementById('toxic-btn').addEventListener('click', () => {
-          const modes = ['positive', 'formal', 'humorous'];
-          const currentIndex = modes.indexOf(this.toxic);
-          this.toxic = modes[(currentIndex + 1) % modes.length];
-          this.updateToxicButton();
-          localStorage.setItem('toxic', this.toxic);
-        });
 
         document.getElementById('polarity-btn').addEventListener('click', () => {
           this.truth = !this.truth;
@@ -641,25 +633,6 @@
           this.render();
         });
 
-        document.getElementById('sentence-btn').addEventListener('click', () => {
-          const counts = ['off', '1', '2', '3'];
-          const currentIndex = counts.indexOf(this.sentenceCount);
-          this.sentenceCount = counts[(currentIndex + 1) % counts.length];
-          this.updateSentenceButton();
-          localStorage.setItem('sentenceCount', this.sentenceCount);
-        });
-
-        document.getElementById('cta-btn').addEventListener('click', () => {
-          this.callToAction = !this.callToAction;
-          this.updateCTAButton();
-          localStorage.setItem('callToAction', this.callToAction.toString());
-        });
-
-        document.getElementById('emoji-btn').addEventListener('click', () => {
-          this.emojis = !this.emojis;
-          this.updateEmojiButton();
-          localStorage.setItem('emojis', this.emojis.toString());
-        });
 
         document.getElementById('clear-btn').addEventListener('click', () => {
           const btn = document.getElementById('clear-btn');
@@ -838,14 +811,14 @@
         this.display.addEventListener('input', (e) => {
           if (e.target.id === 'edit-preference') {
             const val = e.target.textContent.trim();
-            if (val && val !== 'NULL') {
+            if (val && val !== 'NULL' && val !== 'How do you want to sound?') {
               this.preference = val;
               localStorage.setItem('preference', val);
             }
           }
           if (e.target.id === 'edit-header') {
             const val = e.target.textContent.trim();
-            if (val && val !== 'NULL') {
+            if (val && val !== 'NULL' && val !== 'Add a header') {
               this.header = val;
               localStorage.setItem('header', val);
             }
@@ -855,8 +828,7 @@
         this.display.addEventListener('blur', (e) => {
           if (e.target.id === 'edit-preference') {
             const val = e.target.textContent.trim();
-            if (val === '' || val === 'NULL') {
-              e.target.textContent = 'NULL';
+            if (val === '' || val === 'NULL' || val === 'How do you want to sound?') {
               this.preference = '';
               localStorage.removeItem('preference');
             } else {
@@ -866,12 +838,37 @@
           }
           if (e.target.id === 'edit-header') {
             const val = e.target.textContent.trim();
-            if (val === '' || val === 'NULL') {
+            if (val === '' || val === 'NULL' || val === 'Add a header') {
               this.header = '';
               localStorage.removeItem('header');
             } else {
               this.header = val;
               localStorage.setItem('header', val);
+            }
+          }
+          if (e.target.id === 'edit-endpoint') {
+            const val = e.target.textContent.trim();
+            const isDefault = (val === '' || val === 'https://api.x.ai');
+            // Update or insert the sibling default tag
+            let tagEl = e.target.nextElementSibling;
+            if (tagEl && tagEl.classList.contains('default-tag')) tagEl.remove();
+            if (isDefault) {
+              const tag = document.createElement('span');
+              tag.className = 'default-tag';
+              tag.textContent = '[default]';
+              e.target.insertAdjacentElement('afterend', tag);
+            }
+          }
+          if (e.target.id === 'edit-model') {
+            const val = e.target.textContent.trim();
+            const isDefault = (val === '' || val === 'grok-4-1-fast-reasoning');
+            let tagEl = e.target.nextElementSibling;
+            if (tagEl && tagEl.classList.contains('default-tag')) tagEl.remove();
+            if (isDefault) {
+              const tag = document.createElement('span');
+              tag.className = 'default-tag';
+              tag.textContent = '[default]';
+              e.target.insertAdjacentElement('afterend', tag);
             }
           }
           if (e.target.id === 'edit-key') {
@@ -888,38 +885,10 @@
         }, true);
       }
 
-      updateToxicButton() {
-        const btn = document.getElementById('toxic-btn');
-        const labels = {
-          'positive': 'Positive',
-          'formal': 'Formal',
-          'humorous': 'Humorous'
-        };
-        btn.textContent = labels[this.toxic] || 'Positive';
-      }
 
       updatePolarityButton() {
         const btn = document.getElementById('polarity-btn');
         btn.textContent = this.truth ? 'Short Form' : 'Long Form';
-      }
-
-      updateSentenceButton() {
-        const btn = document.getElementById('sentence-btn');
-        if (this.sentenceCount === 'off') {
-          btn.textContent = 'OFF';
-        } else {
-          btn.textContent = this.sentenceCount + ' Sentence' + (this.sentenceCount === '1' ? '' : 's');
-        }
-      }
-
-      updateCTAButton() {
-        const btn = document.getElementById('cta-btn');
-        btn.textContent = 'Call to Action: ' + (this.callToAction ? 'YES' : 'NO');
-      }
-
-      updateEmojiButton() {
-        const btn = document.getElementById('emoji-btn');
-        btn.textContent = 'Emojis: ' + (this.emojis ? 'YES' : 'NO');
       }
 
       normalizeInput() {
@@ -1128,10 +1097,10 @@
             body: JSON.stringify({
               probe: fullProbe,
               truth: this.truth,
-              toxic: this.toxic,
-              sentence_count: this.sentenceCount,
-              call_to_action: this.callToAction,
-              emojis: this.emojis,
+              toxic: 'positive',
+              sentence_count: 'off',
+              call_to_action: false,
+              emojis: false,
               preference: this.preference,
               base_url: this.modelEndpoint,
               api_key: this.apiKey,
@@ -1310,68 +1279,102 @@
         let currentHeader = this.header;
         let currentPreference = this.preference;
         
-        if (endpointEl && endpointEl.textContent.trim() !== 'NULL') {
-          currentEndpoint = endpointEl.textContent.trim();
-          this.modelEndpoint = currentEndpoint;
-          localStorage.setItem('modelEndpoint', this.modelEndpoint);
+        if (endpointEl) {
+          const endpointText = endpointEl.textContent.trim();
+          if (endpointText === '' || endpointText === 'NULL') {
+            this.modelEndpoint = 'https://api.x.ai';
+            localStorage.removeItem('modelEndpoint');
+            currentEndpoint = this.modelEndpoint;
+          } else {
+            currentEndpoint = endpointText;
+            this.modelEndpoint = currentEndpoint;
+            localStorage.setItem('modelEndpoint', this.modelEndpoint);
+          }
         }
-        if (modelEl && modelEl.textContent.trim() !== 'NULL') {
-          currentModel = modelEl.textContent.trim();
-          this.model = currentModel;
-          localStorage.setItem('model', this.model);
+        if (modelEl) {
+          const modelText = modelEl.textContent.trim();
+          if (modelText === '' || modelText === 'NULL') {
+            this.model = 'grok-4-1-fast-reasoning';
+            localStorage.removeItem('model');
+            currentModel = this.model;
+          } else {
+            currentModel = modelText;
+            this.model = currentModel;
+            localStorage.setItem('model', this.model);
+          }
         }
         if (codeEl && !this.codeFieldBeingEdited) {
           const codeText = codeEl.textContent.trim();
-          if (!codeText.match(/^•+$/) && codeText !== 'NULL' && codeText !== '') {
+          if (codeText === '' || codeText === 'enter access code') {
+            this.accessCode = '';
+            localStorage.removeItem('accessCode');
+          } else if (!codeText.match(/^•+$/) && codeText !== 'NULL') {
             this.accessCode = codeText;
             localStorage.setItem('accessCode', this.accessCode);
           }
-          currentCodeDisplay = (this.accessCode && this.accessCode !== 'NULL' && this.accessCode !== '') ? '•'.repeat(this.accessCode.length) : 'NULL';
+          currentCodeDisplay = (this.accessCode && this.accessCode !== 'NULL' && this.accessCode !== '') ? '•'.repeat(this.accessCode.length) : '';
         } else if (codeEl) {
           currentCodeDisplay = codeEl.textContent;
         } else {
-          currentCodeDisplay = (this.accessCode && this.accessCode !== 'NULL' && this.accessCode !== '') ? '•'.repeat(this.accessCode.length) : 'NULL';
+          currentCodeDisplay = (this.accessCode && this.accessCode !== 'NULL' && this.accessCode !== '') ? '•'.repeat(this.accessCode.length) : '';
         }
         
         if (keyEl && !this.keyFieldBeingEdited) {
           const keyText = keyEl.textContent.trim();
-          if (!keyText.match(/^•+$/) && keyText !== 'NULL' && keyText !== '') {
+          if (keyText === '' || keyText === 'enter your api key') {
+            this.apiKey = '';
+            localStorage.removeItem('apiKey');
+          } else if (!keyText.match(/^•+$/) && keyText !== 'NULL') {
             this.apiKey = keyText;
             localStorage.setItem('apiKey', this.apiKey);
           }
-          currentKeyDisplay = (this.apiKey && this.apiKey !== 'NULL' && this.apiKey !== '') ? '•'.repeat(this.apiKey.length) : 'NULL';
+          currentKeyDisplay = (this.apiKey && this.apiKey !== 'NULL' && this.apiKey !== '') ? '•'.repeat(this.apiKey.length) : '';
         } else if (keyEl) {
           currentKeyDisplay = keyEl.textContent;
         } else {
-          currentKeyDisplay = (this.apiKey && this.apiKey !== 'NULL' && this.apiKey !== '') ? '•'.repeat(this.apiKey.length) : 'NULL';
+          currentKeyDisplay = (this.apiKey && this.apiKey !== 'NULL' && this.apiKey !== '') ? '•'.repeat(this.apiKey.length) : '';
         }
         
         if (headerEl) {
           const headerText = headerEl.textContent;
-          if (headerText !== 'NULL' && headerText !== '') {
+          if (headerText !== 'NULL' && headerText !== '' && headerText !== 'Add a header') {
             currentHeader = headerText;
             this.header = currentHeader;
             localStorage.setItem('header', this.header);
           }
         }
-        if (preferenceEl && preferenceEl.textContent.trim() !== 'NULL') {
-          currentPreference = preferenceEl.textContent.trim();
-          this.preference = currentPreference;
-          localStorage.setItem('preference', this.preference);
+        if (preferenceEl) {
+          const prefText = preferenceEl.textContent.trim();
+          if (prefText !== 'NULL' && prefText !== '' && prefText !== 'How do you want to sound?') {
+            currentPreference = prefText;
+            this.preference = currentPreference;
+            localStorage.setItem('preference', this.preference);
+          }
         }
 
         let output = '';
         const structures = this.formatStructures();
         let blockInput = false;
 
-        output += '<span class="reverse-video">code:</span> <span id="edit-code" class="config-value" contenteditable="true" data-actual-code="' + (this.accessCode || '') + '">' + currentCodeDisplay + '</span>\n';
-        output += '<span class="reverse-video">api key:</span> <span id="edit-key" class="config-value" contenteditable="true" data-actual-key="' + (this.apiKey || '') + '">' + currentKeyDisplay + '</span>\n';
-        output += '<span class="reverse-video">endpoint:</span> <span id="edit-endpoint" class="config-value" contenteditable="true">' + (currentEndpoint || 'https://api.x.ai') + '</span>\n';
-        output += '<span class="reverse-video">model:</span> <span id="edit-model" class="config-value" contenteditable="true">' + (currentModel || 'grok-4-1-fast-reasoning') + '</span>\n';
-        const headerDisplay = currentHeader || 'NULL';
-        const headerAttr = (currentHeader || '').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
-        output += '<span class="reverse-video">heading:</span> <span id="edit-header" class="config-value" contenteditable="true" data-raw-header="' + headerAttr + '">' + headerDisplay + '</span>\n';
-        output += '<span class="reverse-video">voice:</span> <span id="edit-preference" class="config-value" contenteditable="true">' + (currentPreference || 'NULL') + '</span>\n';
+        const codePlaceholder = (!this.accessCode || this.accessCode === 'NULL' || this.accessCode === '') ? ' placeholder' : '';
+        const codeDisplay = codePlaceholder ? 'enter access code' : currentCodeDisplay;
+        const keyPlaceholder = (!this.apiKey || this.apiKey === 'NULL' || this.apiKey === '') ? ' placeholder' : '';
+        const keyDisplay = keyPlaceholder ? 'enter your api key' : currentKeyDisplay;
+        const endpointIsDefault = (!currentEndpoint || currentEndpoint === 'https://api.x.ai');
+        const modelIsDefault = (!currentModel || currentModel === 'grok-4-1-fast-reasoning');
+        const endpointDefaultTag = endpointIsDefault ? '<span class="default-tag">[default]</span>' : '';
+        const modelDefaultTag = modelIsDefault ? '<span class="default-tag">[default]</span>' : '';
+        output += '<span class="reverse-video">code:</span> <span id="edit-code" class="config-value' + codePlaceholder + '" contenteditable="true" data-actual-code="' + (this.accessCode || '') + '">' + codeDisplay + '</span>\n';
+        output += '<span class="reverse-video">api key:</span> <span id="edit-key" class="config-value' + keyPlaceholder + '" contenteditable="true" data-actual-key="' + (this.apiKey || '') + '">' + keyDisplay + '</span>\n';
+        output += '<span class="reverse-video">endpoint:</span> <span id="edit-endpoint" class="config-value" contenteditable="true">' + (currentEndpoint || 'https://api.x.ai') + '</span>' + endpointDefaultTag + '\n';
+        output += '<span class="reverse-video">model:</span> <span id="edit-model" class="config-value" contenteditable="true">' + (currentModel || 'grok-4-1-fast-reasoning') + '</span>' + modelDefaultTag + '\n';
+        const headerDisplay = this.header || 'Add a header';
+        const headerAttr = (this.header || '').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+        const headerPlaceholder = !this.header ? ' placeholder' : '';
+        const voiceDisplay = this.preference || 'How do you want to sound?';
+        const voicePlaceholder = !this.preference ? ' placeholder' : '';
+        output += '<span class="reverse-video">heading:</span> <span id="edit-header" class="config-value' + headerPlaceholder + '" contenteditable="true" data-raw-header="' + headerAttr + '">' + headerDisplay + '</span>\n';
+        output += '<span class="reverse-video">voice:</span> <span id="edit-preference" class="config-value' + voicePlaceholder + '" contenteditable="true">' + voiceDisplay + '</span>\n';
         output += '<div class="message-separator"></div>';
 
         switch(this.state) {
@@ -1412,17 +1415,15 @@
         
         if (!this.codeFieldBeingEdited) {
           const codeElAfterRender = document.getElementById('edit-code');
-          if (codeElAfterRender) {
-            const maskedCode = (this.accessCode && this.accessCode !== 'NULL') ? '•'.repeat(this.accessCode.length) : 'NULL';
-            codeElAfterRender.textContent = maskedCode;
+          if (codeElAfterRender && this.accessCode && this.accessCode !== 'NULL' && this.accessCode !== '') {
+            codeElAfterRender.textContent = '•'.repeat(this.accessCode.length);
           }
         }
         
         if (!this.keyFieldBeingEdited) {
           const keyElAfterRender = document.getElementById('edit-key');
-          if (keyElAfterRender) {
-            const maskedKey = (this.apiKey && this.apiKey !== 'NULL') ? '•'.repeat(this.apiKey.length) : 'NULL';
-            keyElAfterRender.textContent = maskedKey;
+          if (keyElAfterRender && this.apiKey && this.apiKey !== 'NULL' && this.apiKey !== '') {
+            keyElAfterRender.textContent = '•'.repeat(this.apiKey.length);
           }
         }
         
