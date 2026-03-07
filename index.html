@@ -1358,14 +1358,16 @@
 
         const codePlaceholder = (!this.accessCode || this.accessCode === 'NULL' || this.accessCode === '') ? ' placeholder' : '';
         const codeDisplay = codePlaceholder ? 'enter access code' : currentCodeDisplay;
+        const codeRequiredTag = codePlaceholder ? '<span class="default-tag">[required]</span>' : '';
         const keyPlaceholder = (!this.apiKey || this.apiKey === 'NULL' || this.apiKey === '') ? ' placeholder' : '';
         const keyDisplay = keyPlaceholder ? 'enter your api key' : currentKeyDisplay;
+        const keyRequiredTag = keyPlaceholder ? '<span class="default-tag">[required]</span>' : '';
         const endpointIsDefault = (!currentEndpoint || currentEndpoint === 'https://api.x.ai');
         const modelIsDefault = (!currentModel || currentModel === 'grok-4-1-fast-reasoning');
         const endpointDefaultTag = endpointIsDefault ? '<span class="default-tag">[default]</span>' : '';
         const modelDefaultTag = modelIsDefault ? '<span class="default-tag">[default]</span>' : '';
-        output += '<span class="reverse-video">code:</span> <span id="edit-code" class="config-value' + codePlaceholder + '" contenteditable="true" data-actual-code="' + (this.accessCode || '') + '">' + codeDisplay + '</span>\n';
-        output += '<span class="reverse-video">api key:</span> <span id="edit-key" class="config-value' + keyPlaceholder + '" contenteditable="true" data-actual-key="' + (this.apiKey || '') + '">' + keyDisplay + '</span>\n';
+        output += '<span class="reverse-video">code:</span> <span id="edit-code" class="config-value' + codePlaceholder + '" contenteditable="true" data-actual-code="' + (this.accessCode || '') + '">' + codeDisplay + '</span>' + codeRequiredTag + '\n';
+        output += '<span class="reverse-video">api key:</span> <span id="edit-key" class="config-value' + keyPlaceholder + '" contenteditable="true" data-actual-key="' + (this.apiKey || '') + '">' + keyDisplay + '</span>' + keyRequiredTag + '\n';
         output += '<span class="reverse-video">endpoint:</span> <span id="edit-endpoint" class="config-value" contenteditable="true">' + (currentEndpoint || 'https://api.x.ai') + '</span>' + endpointDefaultTag + '\n';
         output += '<span class="reverse-video">model:</span> <span id="edit-model" class="config-value" contenteditable="true">' + (currentModel || 'grok-4-1-fast-reasoning') + '</span>' + modelDefaultTag + '\n';
         const headerDisplay = this.header || 'Add a header';
