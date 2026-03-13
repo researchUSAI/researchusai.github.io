@@ -805,13 +805,35 @@
             const sel = window.getSelection();
             sel.removeAllRanges();
             sel.addRange(range);
+          } else if (e.target.id === 'edit-header') {
+            const val = e.target.textContent.trim();
+            if (val === 'Add a header') {
+              e.target.textContent = '';
+            }
+            const range = document.createRange();
+            range.selectNodeContents(e.target);
+            range.collapse(false);
+            const sel = window.getSelection();
+            sel.removeAllRanges();
+            sel.addRange(range);
+          } else if (e.target.id === 'edit-preference') {
+            const val = e.target.textContent.trim();
+            if (val === 'How do you want me to sound?') {
+              e.target.textContent = '';
+            }
+            const range = document.createRange();
+            range.selectNodeContents(e.target);
+            range.collapse(false);
+            const sel = window.getSelection();
+            sel.removeAllRanges();
+            sel.addRange(range);
           }
         }, true);
 
         this.display.addEventListener('input', (e) => {
           if (e.target.id === 'edit-preference') {
             const val = e.target.textContent.trim();
-            if (val && val !== 'NULL' && val !== 'How do you want to sound?') {
+            if (val && val !== 'NULL' && val !== 'How do you want me to sound?') {
               this.preference = val;
               localStorage.setItem('preference', val);
             }
@@ -828,7 +850,7 @@
         this.display.addEventListener('blur', (e) => {
           if (e.target.id === 'edit-preference') {
             const val = e.target.textContent.trim();
-            if (val === '' || val === 'NULL' || val === 'How do you want to sound?') {
+            if (val === '' || val === 'NULL' || val === 'How do you want me to sound?') {
               this.preference = '';
               localStorage.removeItem('preference');
             } else {
@@ -1345,7 +1367,7 @@
         }
         if (preferenceEl) {
           const prefText = preferenceEl.textContent.trim();
-          if (prefText !== 'NULL' && prefText !== '' && prefText !== 'How do you want to sound?') {
+          if (prefText !== 'NULL' && prefText !== '' && prefText !== 'How do you want me to sound?') {
             currentPreference = prefText;
             this.preference = currentPreference;
             localStorage.setItem('preference', this.preference);
@@ -1373,7 +1395,7 @@
         const headerDisplay = this.header || 'Add a header';
         const headerAttr = (this.header || '').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
         const headerPlaceholder = !this.header ? ' placeholder' : '';
-        const voiceDisplay = this.preference || 'How do you want to sound?';
+        const voiceDisplay = this.preference || 'How do you want me to sound?';
         const voicePlaceholder = !this.preference ? ' placeholder' : '';
         output += '<span class="reverse-video">heading:</span> <span id="edit-header" class="config-value' + headerPlaceholder + '" contenteditable="true" data-raw-header="' + headerAttr + '">' + headerDisplay + '</span>\n';
         output += '<span class="reverse-video">voice:</span> <span id="edit-preference" class="config-value' + voicePlaceholder + '" contenteditable="true">' + voiceDisplay + '</span>\n';
