@@ -6,8 +6,8 @@
   <title>researchusai.com</title>
   <style>
     body {
-      background: #181818;
-      color: #BDCEF1;
+      background: #1a1a1f;
+      color: #C8D8F0;
       font-family: 'Courier New', monospace;
       height: 100vh;
       width: 100vw;
@@ -19,10 +19,6 @@
       font-size: 16px;
       line-height: 24px;
       overflow: hidden;
-      text-shadow: 
-        0 0 5px rgba(189, 206, 241, 0.8),
-        0 0 10px rgba(189, 206, 241, 0.5),
-        0 0 15px rgba(189, 206, 241, 0.3);
       position: relative;
     }
     /* Scanline overlay */
@@ -50,30 +46,30 @@
     @keyframes glow-pulse {
       0%, 100% { 
         box-shadow: 
-          0 0 5px rgba(189, 206, 241, 0.4),
-          0 0 10px rgba(189, 206, 241, 0.3),
-          inset 0 0 5px rgba(189, 206, 241, 0.2);
+          0 0 5px rgba(200, 216, 240, 0.4),
+          0 0 10px rgba(200, 216, 240, 0.3),
+          inset 0 0 5px rgba(200, 216, 240, 0.2);
       }
       50% { 
         box-shadow: 
-          0 0 10px rgba(189, 206, 241, 0.6),
-          0 0 20px rgba(189, 206, 241, 0.5),
-          0 0 30px rgba(189, 206, 241, 0.3),
-          inset 0 0 10px rgba(189, 206, 241, 0.3);
+          0 0 10px rgba(200, 216, 240, 0.6),
+          0 0 20px rgba(200, 216, 240, 0.5),
+          0 0 30px rgba(200, 216, 240, 0.3),
+          inset 0 0 10px rgba(200, 216, 240, 0.3);
       }
     }
     @keyframes border-glow {
-      0%, 100% { border-color: #BDCEF1; }
+      0%, 100% { border-color: #C8D8F0; }
       50% { border-color: #D4E3FF; }
     }
     /* Blinking cursor */
     #input::after {
       content: '█';
       animation: blink 1s step-end infinite;
-      color: #BDCEF1;
+      color: #C8D8F0;
       text-shadow: 
-        0 0 5px rgba(189, 206, 241, 0.8),
-        0 0 10px rgba(189, 206, 241, 0.5);
+        0 0 5px rgba(200, 216, 240, 0.8),
+        0 0 10px rgba(200, 216, 240, 0.5);
     }
     /* Hide ::after when inline cursor is active */
     #input.has-inline-cursor::after {
@@ -82,15 +78,15 @@
     /* Inline cursor for when clicking inside text */
     #inline-cursor {
       position: absolute;
-      background: #BDCEF1;
+      background: #C8D8F0;
       width: 1ch;
       height: 1em;
       animation: blink 1s step-end infinite;
       pointer-events: none;
       display: none;
       box-shadow: 
-        0 0 8px rgba(189, 206, 241, 0.8),
-        0 0 15px rgba(189, 206, 241, 0.5);
+        0 0 8px rgba(200, 216, 240, 0.8),
+        0 0 15px rgba(200, 216, 240, 0.5);
     }
     @keyframes blink {
       0%, 50% { opacity: 1; }
@@ -101,11 +97,11 @@
       height: var(--toolbar-h, 15vh);
       padding: 0.75em 1ch;
       background: #222;
-      border-bottom: 2px solid #BDCEF1;
+      border-bottom: 2px solid #C8D8F0;
       display: flex;
       flex-direction: column;
       gap: 0.75em;
-      box-shadow: 0 2px 15px rgba(189, 206, 241, 0.3);
+      box-shadow: 0 2px 15px rgba(200, 216, 240, 0.3);
       overflow-y: auto;
       overflow-x: hidden;
       box-sizing: border-box;
@@ -120,8 +116,8 @@
     }
     #toolbar button {
       background: linear-gradient(145deg, #2a2a2a, #3a3a3a);
-      color: #BDCEF1;
-      border: 2px solid #BDCEF1;
+      color: #C8D8F0;
+      border: 2px solid #C8D8F0;
       padding: 1em 1.5em;
       font-family: inherit;
       font-size: 1.1em;
@@ -133,36 +129,38 @@
       overflow: hidden;
       text-overflow: ellipsis;
       text-shadow: 
-        0 0 5px rgba(189, 206, 241, 0.8),
-        0 0 10px rgba(189, 206, 241, 0.4);
+        0 0 5px rgba(200, 216, 240, 0.8),
+        0 0 10px rgba(200, 216, 240, 0.4);
       box-shadow: 
-        0 0 8px rgba(189, 206, 241, 0.3),
-        inset 0 0 5px rgba(189, 206, 241, 0.1);
+        0 0 8px rgba(200, 216, 240, 0.3),
+        inset 0 0 5px rgba(200, 216, 240, 0.1);
       transition: all 0.2s;
-      animation: border-glow 2s infinite;
       touch-action: manipulation;
-      -webkit-tap-highlight-color: rgba(189, 206, 241, 0.3);
+      -webkit-tap-highlight-color: rgba(200, 216, 240, 0.3);
+      border-radius: 3px;
+    }
+    #send-btn {
+      animation: glow-pulse 2s infinite;
     }
     #toolbar button:hover {
       background: linear-gradient(145deg, #3a3a3a, #4a4a4a);
       box-shadow: 
-        0 0 15px rgba(189, 206, 241, 0.5),
-        0 0 25px rgba(189, 206, 241, 0.3),
-        inset 0 0 8px rgba(189, 206, 241, 0.2);
+        0 0 15px rgba(200, 216, 240, 0.5),
+        0 0 25px rgba(200, 216, 240, 0.3),
+        inset 0 0 8px rgba(200, 216, 240, 0.2);
       transform: translateY(-1px);
     }
     #toolbar button:active {
       background: linear-gradient(145deg, #4a4a4a, #5a5a5a);
       box-shadow: 
-        0 0 20px rgba(189, 206, 241, 0.6),
-        inset 0 0 12px rgba(189, 206, 241, 0.3);
+        0 0 20px rgba(200, 216, 240, 0.6),
+        inset 0 0 12px rgba(200, 216, 240, 0.3);
       transform: translateY(0);
     }
     #polarity-btn {
-      background: linear-gradient(145deg, #BDCEF1, #D4E3FF);
-      color: #181818;
+      background: linear-gradient(145deg, #C8D8F0, #D4E3FF);
+      color: #1a1a1f;
       font-weight: bold;
-      animation: glow-pulse 2s infinite;
     }
 
     #display-container {
@@ -172,11 +170,11 @@
       flex-direction: column;
       overflow: hidden;
       position: relative;
-      border: 2px solid rgba(189, 206, 241, 0.3);
+      border: 2px solid rgba(200, 216, 240, 0.3);
       border-top: none;
       box-shadow: 
-        inset 0 0 25px rgba(189, 206, 241, 0.1),
-        0 0 15px rgba(189, 206, 241, 0.15);
+        inset 0 0 25px rgba(200, 216, 240, 0.1),
+        0 0 15px rgba(200, 216, 240, 0.15);
     }
     #display {
       flex: 0 0 auto;
@@ -187,14 +185,14 @@
       white-space: pre-wrap;
       word-wrap: break-word;
       font-size: 1.1em;
-      line-height: 1.6;
+      line-height: 1.85;
       box-sizing: border-box;
     }
     #input {
       flex: 1 1 auto;
       min-height: 40px;
       border: none;
-      border-top: 2px solid rgba(189, 206, 241, 0.3);
+      border-top: 2px solid rgba(200, 216, 240, 0.3);
       outline: none;
       background: rgba(34, 34, 34, 0.5);
       color: inherit;
@@ -212,16 +210,16 @@
       box-sizing: border-box;
     }
     #input::selection {
-      background: #BDCEF1;
-      color: #181818;
+      background: #C8D8F0;
+      color: #1a1a1f;
     }
     #input .input-reverse {
-      background: #BDCEF1;
-      color: #181818;
+      background: #C8D8F0;
+      color: #1a1a1f;
       padding: 0 0.2ch;
       box-shadow: 
-        0 0 8px rgba(189, 206, 241, 0.8),
-        0 0 15px rgba(189, 206, 241, 0.5);
+        0 0 8px rgba(200, 216, 240, 0.8),
+        0 0 15px rgba(200, 216, 240, 0.5);
     }
     #measure {
       position: absolute;
@@ -230,34 +228,43 @@
       white-space: pre;
     }
     .reverse-video {
-      background: #BDCEF1;
-      color: #181818;
+      background: #C8D8F0;
+      color: #1a1a1f;
       padding: 0 0.2ch;
+      font-size: 1em;
+      font-weight: bold;
       box-shadow: 
-        0 0 8px rgba(189, 206, 241, 0.8),
-        0 0 15px rgba(189, 206, 241, 0.5);
+        0 0 8px rgba(200, 216, 240, 0.8),
+        0 0 15px rgba(200, 216, 240, 0.5);
     }
     .config-value {
-      color: #BDCEF1;
+      color: #C8D8F0;
       background: #222;
       padding: 0 0.5ch;
       cursor: text;
       white-space: pre-wrap;
       word-wrap: break-word;
-      max-width: 50ch;
+      max-width: 80ch;
       display: inline;
-      border: 1px solid rgba(189, 206, 241, 0.3);
+      border: 1px solid rgba(200, 216, 240, 0.3);
       box-shadow: 
-        0 0 5px rgba(189, 206, 241, 0.2),
-        inset 0 0 5px rgba(189, 206, 241, 0.1);
+        0 0 5px rgba(200, 216, 240, 0.2),
+        inset 0 0 5px rgba(200, 216, 240, 0.1);
+    }
+    .config-value:focus {
+      outline: none;
+      border-color: rgba(200, 216, 240, 0.8);
+      box-shadow:
+        0 0 8px rgba(200, 216, 240, 0.3),
+        inset 0 0 5px rgba(200, 216, 240, 0.15);
     }
     .config-value.placeholder {
-      color: rgba(189, 206, 241, 0.35);
+      color: rgba(200, 216, 240, 0.55);
       font-style: italic;
       text-shadow: none;
     }
     .default-tag {
-      color: rgba(189, 206, 241, 0.35);
+      color: rgba(200, 216, 240, 0.35);
       font-style: italic;
       text-shadow: none;
       pointer-events: none;
@@ -268,28 +275,25 @@
     }
     /* Scrollbar styling */
     ::-webkit-scrollbar {
-      width: 12px;
+      width: 4px;
     }
     ::-webkit-scrollbar-track {
-      background: #181818;
-      border: 1px solid rgba(189, 206, 241, 0.2);
+      background: transparent;
     }
     ::-webkit-scrollbar-thumb {
-      background: linear-gradient(145deg, #3a3a3a, #BDCEF1);
-      border: 1px solid #BDCEF1;
-      box-shadow: 0 0 8px rgba(189, 206, 241, 0.4);
+      background: rgba(200, 216, 240, 0.4);
+      border-radius: 2px;
     }
     ::-webkit-scrollbar-thumb:hover {
-      background: #BDCEF1;
-      box-shadow: 0 0 15px rgba(189, 206, 241, 0.7);
+      background: rgba(200, 216, 240, 0.8);
     }
     /* Drag handles */
     .drag-handle {
-      flex: 0 0 14px;
+      flex: 0 0 22px;
       width: 100%;
-      background: rgba(189, 206, 241, 0.2);
-      border-top: 1px solid rgba(189, 206, 241, 0.5);
-      border-bottom: 1px solid rgba(189, 206, 241, 0.5);
+      background: rgba(200, 216, 240, 0.2);
+      border-top: 1px solid rgba(200, 216, 240, 0.5);
+      border-bottom: 1px solid rgba(200, 216, 240, 0.5);
       cursor: ns-resize;
       display: flex;
       align-items: center;
@@ -301,17 +305,29 @@
       position: relative;
     }
     .drag-handle:hover, .drag-handle.dragging {
-      background: rgba(189, 206, 241, 0.45);
+      background: rgba(200, 216, 240, 0.45);
       box-shadow: 
-        0 0 10px rgba(189, 206, 241, 0.5),
-        inset 0 0 6px rgba(189, 206, 241, 0.3);
+        0 0 10px rgba(200, 216, 240, 0.5),
+        inset 0 0 6px rgba(200, 216, 240, 0.3);
     }
     .drag-handle::after {
       content: '━━━━━';
-      color: rgba(189, 206, 241, 0.7);
-      font-size: 0.5em;
+      color: rgba(200, 216, 240, 0.7);
+      font-size: 0.75em;
       letter-spacing: 3px;
-      text-shadow: 0 0 6px rgba(189, 206, 241, 0.8);
+      text-shadow: 0 0 6px rgba(200, 216, 240, 0.8);
+    }
+    .message-separator {
+      margin: 0.5em 0;
+      font-size: 0.75em;
+      letter-spacing: 3px;
+      color: rgba(200, 216, 240, 0.7);
+      text-shadow: 0 0 6px rgba(200, 216, 240, 0.5);
+      pointer-events: none;
+      user-select: none;
+    }
+    .message-separator::after {
+      content: '━━━━━';
     }
   </style>
 </head>
@@ -672,6 +688,12 @@
           const content = this.input.textContent.trim();
           if (content) {
             this.input.innerHTML = '';
+            btn.style.background = '#C8D8F0';
+            btn.style.color = '#1a1a1f';
+            setTimeout(() => {
+              btn.style.background = '';
+              btn.style.color = '';
+            }, 150);
             btn.textContent = 'Sent!';
             setTimeout(() => {
               btn.textContent = 'Send';
@@ -972,7 +994,7 @@
         this.dotInterval = setInterval(() => {
           this.dotCount = (this.dotCount + 1) % 4;
           this.render();
-        }, 1000);
+        }, 600);
       }
 
       stopWait() {
@@ -1388,10 +1410,6 @@
         const modelIsDefault = (!currentModel || currentModel === 'grok-4-1-fast-reasoning');
         const endpointDefaultTag = endpointIsDefault ? '<span class="default-tag">[default]</span>' : '';
         const modelDefaultTag = modelIsDefault ? '<span class="default-tag">[default]</span>' : '';
-        output += '<span class="reverse-video">code:</span> <span id="edit-code" class="config-value' + codePlaceholder + '" contenteditable="true" data-actual-code="' + (this.accessCode || '') + '">' + codeDisplay + '</span>' + codeRequiredTag + '\n';
-        output += '<span class="reverse-video">api key:</span> <span id="edit-key" class="config-value' + keyPlaceholder + '" contenteditable="true" data-actual-key="' + (this.apiKey || '') + '">' + keyDisplay + '</span>' + keyRequiredTag + '\n';
-        output += '<span class="reverse-video">endpoint:</span> <span id="edit-endpoint" class="config-value" contenteditable="true">' + (currentEndpoint || 'https://api.x.ai') + '</span>' + endpointDefaultTag + '\n';
-        output += '<span class="reverse-video">model:</span> <span id="edit-model" class="config-value" contenteditable="true">' + (currentModel || 'grok-4-1-fast-reasoning') + '</span>' + modelDefaultTag + '\n';
         const headerDisplay = this.header || 'Add a header';
         const headerAttr = (this.header || '').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
         const headerPlaceholder = !this.header ? ' placeholder' : '';
@@ -1399,6 +1417,10 @@
         const voicePlaceholder = !this.preference ? ' placeholder' : '';
         output += '<span class="reverse-video">heading:</span> <span id="edit-header" class="config-value' + headerPlaceholder + '" contenteditable="true" data-raw-header="' + headerAttr + '">' + headerDisplay + '</span>\n';
         output += '<span class="reverse-video">voice:</span> <span id="edit-preference" class="config-value' + voicePlaceholder + '" contenteditable="true">' + voiceDisplay + '</span>\n';
+        output += '<span class="reverse-video">code:</span> <span id="edit-code" class="config-value' + codePlaceholder + '" contenteditable="true" data-actual-code="' + (this.accessCode || '') + '">' + codeDisplay + '</span>' + codeRequiredTag + '\n';
+        output += '<span class="reverse-video">api key:</span> <span id="edit-key" class="config-value' + keyPlaceholder + '" contenteditable="true" data-actual-key="' + (this.apiKey || '') + '">' + keyDisplay + '</span>' + keyRequiredTag + '\n';
+        output += '<span class="reverse-video">endpoint:</span> <span id="edit-endpoint" class="config-value" contenteditable="true">' + (currentEndpoint || 'https://api.x.ai') + '</span>' + endpointDefaultTag + '\n';
+        output += '<span class="reverse-video">model:</span> <span id="edit-model" class="config-value" contenteditable="true">' + (currentModel || 'grok-4-1-fast-reasoning') + '</span>' + modelDefaultTag + '\n';
         output += '<div class="message-separator"></div>';
 
         switch(this.state) {
@@ -1529,6 +1551,11 @@
               this.state = State.PROBE_WAIT;
               this.render();
               this.scrollToBottom();
+              const dc = document.getElementById('display-container');
+              if (dc) {
+                dc.style.borderColor = 'rgba(200, 216, 240, 0.9)';
+                setTimeout(() => { dc.style.borderColor = ''; }, 150);
+              }
               this.startWait();
               this.currentProbe = cmd;
               const response = await this.coordinate(cmd);
@@ -1575,6 +1602,11 @@
               this.state = State.PROBE_WAIT;
               this.render();
               this.scrollToBottom();
+              const dc = document.getElementById('display-container');
+              if (dc) {
+                dc.style.borderColor = 'rgba(200, 216, 240, 0.9)';
+                setTimeout(() => { dc.style.borderColor = ''; }, 150);
+              }
               this.startWait();
               this.currentProbe = cmd;
               const response = await this.coordinate(cmd);
