@@ -408,7 +408,7 @@
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
-        a.download = `${this.id}.txt`;
+        a.download = `${header ? header.replace(/[^a-z0-9_\-\s]/gi, '').trim().replace(/\s+/g, '_') : this.id}.txt`;
         a.click();
         URL.revokeObjectURL(url);
       }
@@ -581,6 +581,13 @@
         });
 
         document.getElementById('back-btn').addEventListener('click', () => {
+          const backBtn = document.getElementById('back-btn');
+          backBtn.style.background = '#C8D8F0';
+          backBtn.style.color = '#1a1a1f';
+          setTimeout(() => {
+            backBtn.style.background = '';
+            backBtn.style.color = '';
+          }, 150);
           if (this.lastActionWasFileDrop && this.structures.length > 0) {
             this.structures.pop();
             this.lastActionWasFileDrop = false;
@@ -1390,7 +1397,7 @@
         }
         if (preferenceEl) {
           const prefText = preferenceEl.textContent.trim();
-          if (prefText !== 'NULL' && prefText !== '' && prefText !== 'How do you want me to sound?') {
+          if (prefText !== 'NULL' && prefText !== '' && prefText !== 'Make me sound like...') {
             currentPreference = prefText;
             this.preference = currentPreference;
             localStorage.setItem('preference', this.preference);
@@ -1414,7 +1421,7 @@
         const headerDisplay = this.header || 'Add a header';
         const headerAttr = (this.header || '').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
         const headerPlaceholder = !this.header ? ' placeholder' : '';
-        const voiceDisplay = this.preference || 'How do you want me to sound?';
+        const voiceDisplay = this.preference || 'Make me sound like...';
         const voicePlaceholder = !this.preference ? ' placeholder' : '';
         output += '<span class="reverse-video">heading:</span> <span id="edit-header" class="config-value' + headerPlaceholder + '" contenteditable="true" data-raw-header="' + headerAttr + '">' + headerDisplay + '</span>\n';
         output += '<span class="reverse-video">voice:</span> <span id="edit-preference" class="config-value' + voicePlaceholder + '" contenteditable="true">' + voiceDisplay + '</span>\n';
