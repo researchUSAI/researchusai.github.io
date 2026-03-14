@@ -338,6 +338,9 @@
     <div id="toolbar-row-1">
       <button id="export-btn">Export</button>
       <button id="import-btn">Import</button>
+      <button id="import-cancel-btn" style="display:none">Cancel</button>
+      <button id="import-return-btn" style="display:none">Return to Conversation</button>
+      <button id="import-source-btn" style="display:none">Add as Source</button>
       <input type="file" id="import-input" accept=".txt" style="display:none">
       <button id="support-btn">Get Code</button>
       <button id="pastecode-btn">Paste Code</button>
@@ -583,11 +586,33 @@
           }
         });
 
+        const showImportChoices = (show) => {
+          document.getElementById('import-btn').style.display = show ? 'none' : '';
+          document.getElementById('import-return-btn').style.display = show ? '' : 'none';
+          document.getElementById('import-source-btn').style.display = show ? '' : 'none';
+          document.getElementById('import-cancel-btn').style.display = show ? '' : 'none';
+        };
+
         document.getElementById('import-btn').addEventListener('click', () => {
-          const choice = confirm('Return\n\nCancel = Add as source');
-          this.importMode = choice ? 'return' : 'source';
+          showImportChoices(true);
+        });
+
+        document.getElementById('import-return-btn').addEventListener('click', () => {
+          this.importMode = 'return';
+          showImportChoices(false);
           document.getElementById('import-input').value = '';
           document.getElementById('import-input').click();
+        });
+
+        document.getElementById('import-source-btn').addEventListener('click', () => {
+          this.importMode = 'source';
+          showImportChoices(false);
+          document.getElementById('import-input').value = '';
+          document.getElementById('import-input').click();
+        });
+
+        document.getElementById('import-cancel-btn').addEventListener('click', () => {
+          showImportChoices(false);
         });
 
         document.getElementById('import-input').addEventListener('change', (e) => {
