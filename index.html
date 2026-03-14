@@ -139,6 +139,7 @@
       -webkit-tap-highlight-color: rgba(200, 216, 240, 0.3);
       border-radius: 3px;
     }
+
     #send-btn {
       animation: glow-pulse 2s infinite;
     }
@@ -336,6 +337,8 @@
   <div id="toolbar">
     <div id="toolbar-row-1">
       <button id="export-btn">Export</button>
+      <button id="import-btn">Import</button>
+      <input type="file" id="import-input" accept=".txt" style="display:none">
       <button id="support-btn">Get Code</button>
       <button id="pastecode-btn">Paste Code</button>
       <button id="getkey-btn">Get API Key</button>
@@ -388,7 +391,7 @@
       addResponse(probe) {
         this.log.push({ type: 'response', id: `r_${Date.now()}`, timestamp: Date.now(), probe });
       }
-      release(header) {
+      release() {
         this.releaseTime = new Date().toLocaleTimeString();
 
         let text = `${this.date} (${this.day})\n`;
@@ -408,7 +411,7 @@
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
-        a.download = `${header ? header.replace(/[^a-z0-9_\-\s]/gi, '').trim().replace(/\s+/g, '_') : this.id}.txt`;
+        a.download = `${this.id}.txt`;
         a.click();
         URL.revokeObjectURL(url);
       }
@@ -426,7 +429,6 @@
         this.model = localStorage.getItem('model') || 'grok-4-1-fast-reasoning';
         this.accessCode = localStorage.getItem('accessCode') || '';
         this.apiKey = localStorage.getItem('apiKey') || '';
-        this.header = localStorage.getItem('header') || '';
         this.preference = localStorage.getItem('preference') || '';
         this.truth = localStorage.getItem('truth') === 'false' ? false : true;
         
@@ -439,6 +441,7 @@
         this.backdoorMode = false;
         this.lastInitiation = null;
         this.lastActionWasFileDrop = false;
+        this.importMode = null;
         this.keyFieldBeingEdited = false;
         this.codeFieldBeingEdited = false;
         this.setupEvents();
@@ -572,12 +575,60 @@
         document.getElementById('export-btn').addEventListener('click', () => {
           const btn = document.getElementById('export-btn');
           if (this.currentStructure) {
-            this.currentStructure.release(this.header);
+            this.currentStructure.release();
             btn.textContent = 'Exported!';
             setTimeout(() => {
               btn.textContent = 'Export';
             }, 1000);
           }
+        });
+
+        document.getElementById('import-btn').addEventListener('click', () => {
+          const choice = confirm('Return\n\nCancel = Add as source');
+          this.importMode = choice ? 'return' : 'source';
+          document.getElementById('import-input').value = '';
+          document.getElementById('import-input').click();
+        });
+
+        document.getElementById('import-input').addEventListener('change', (e) => {
+          const file = e.target.files[0];
+          if (!file) return;
+          const reader = new FileReader();
+          reader.onload = (ev) => {
+            const text = ev.target.result;
+            const structure = this.parseTxt(text);
+            if (!structure || structure.log.length === 0) {
+              alert('Could not read file.');
+              return;
+            }
+            if (this.importMode === 'return') {
+              // Return: restore as active session
+              this.structures = [];
+              this.stack = [];
+              this.currentStructure = new Structure();
+              this.currentStructure.date = structure.date;
+              this.currentStructure.day = structure.day;
+              this.currentStructure.log = structure.log;
+              for (const entry of structure.log) {
+                if (entry.type === 'initiation') {
+                  this.stack.push(`user:\n${entry.probe}`);
+                } else if (entry.type === 'response') {
+                  this.stack.push(`llm:\n${entry.probe}`);
+                }
+              }
+              this.lastActionWasFileDrop = true;
+              this.state = State.PROBE_RECOVER;
+            } else {
+              // Add as source: push into structures as released context
+              this.structures.push(structure);
+              this.lastActionWasFileDrop = true;
+              this.state = State.PROBE_RECOVER;
+            }
+            this.importMode = null;
+            this.render();
+            this.scrollToBottom();
+          };
+          reader.readAsText(file);
         });
 
         document.getElementById('back-btn').addEventListener('click', () => {
@@ -835,20 +886,9 @@
             const sel = window.getSelection();
             sel.removeAllRanges();
             sel.addRange(range);
-          } else if (e.target.id === 'edit-header') {
-            const val = e.target.textContent.trim();
-            if (val === 'Add a header') {
-              e.target.textContent = '';
-            }
-            const range = document.createRange();
-            range.selectNodeContents(e.target);
-            range.collapse(false);
-            const sel = window.getSelection();
-            sel.removeAllRanges();
-            sel.addRange(range);
           } else if (e.target.id === 'edit-preference') {
             const val = e.target.textContent.trim();
-            if (val === 'How do you want me to sound?') {
+            if (val === 'Make me sound like...') {
               e.target.textContent = '';
             }
             const range = document.createRange();
@@ -863,16 +903,9 @@
         this.display.addEventListener('input', (e) => {
           if (e.target.id === 'edit-preference') {
             const val = e.target.textContent.trim();
-            if (val && val !== 'NULL' && val !== 'How do you want me to sound?') {
+            if (val && val !== 'NULL' && val !== 'Make me sound like...') {
               this.preference = val;
               localStorage.setItem('preference', val);
-            }
-          }
-          if (e.target.id === 'edit-header') {
-            const val = e.target.textContent.trim();
-            if (val && val !== 'NULL' && val !== 'Add a header') {
-              this.header = val;
-              localStorage.setItem('header', val);
             }
           }
         }, true);
@@ -880,22 +913,12 @@
         this.display.addEventListener('blur', (e) => {
           if (e.target.id === 'edit-preference') {
             const val = e.target.textContent.trim();
-            if (val === '' || val === 'NULL' || val === 'How do you want me to sound?') {
+            if (val === '' || val === 'NULL' || val === 'Make me sound like...') {
               this.preference = '';
               localStorage.removeItem('preference');
             } else {
               this.preference = val;
               localStorage.setItem('preference', val);
-            }
-          }
-          if (e.target.id === 'edit-header') {
-            const val = e.target.textContent.trim();
-            if (val === '' || val === 'NULL' || val === 'Add a header') {
-              this.header = '';
-              localStorage.removeItem('header');
-            } else {
-              this.header = val;
-              localStorage.setItem('header', val);
             }
           }
           if (e.target.id === 'edit-endpoint') {
@@ -1064,6 +1087,50 @@
           const preview = s.log.length > 0 ? s.log[0].probe.substring(0, 20) : 'empty';
           return `[${i}]: [${s.date}] [${s.day}] [${s.releaseTime || 'active'}] [${preview}...]`;
         }).join('\n');
+      }
+
+      parseTxt(text) {
+        const structure = new Structure();
+        const lines = text.split('\n');
+        // Parse header line: "3/13/2026 (Fri)"
+        const headerMatch = lines[0] && lines[0].match(/^(.+?)\s+\((\w+)\)/);
+        if (headerMatch) {
+          structure.date = headerMatch[1].trim();
+          structure.day = headerMatch[2].trim();
+        }
+        // Parse release time: "Released: 2:45:00 PM"
+        const releasedMatch = lines[1] && lines[1].match(/^Released:\s+(.+)/);
+        if (releasedMatch) {
+          structure.releaseTime = releasedMatch[1].trim();
+        }
+        // Parse turns
+        const entryPattern = /^(USER|LLM) \d{1,2}:\d{2} (?:AM|PM):$/;
+        let currentType = null;
+        let currentLines = [];
+        const flush = () => {
+          if (!currentType || currentLines.length === 0) return;
+          const probe = currentLines.join('\n').replace(/\n+$/, '');
+          if (probe) {
+            structure.log.push({
+              type: currentType === 'USER' ? 'initiation' : 'response',
+              id: `${currentType === 'USER' ? 'i' : 'r'}_${Date.now()}_${Math.random()}`,
+              timestamp: Date.now(),
+              probe
+            });
+          }
+          currentLines = [];
+        };
+        for (let i = 2; i < lines.length; i++) {
+          const line = lines[i];
+          if (entryPattern.test(line.trim())) {
+            flush();
+            currentType = line.trim().startsWith('USER') ? 'USER' : 'LLM';
+          } else if (currentType !== null) {
+            currentLines.push(line);
+          }
+        }
+        flush();
+        return structure;
       }
 
       formatStack() {
@@ -1294,8 +1361,7 @@
               if (!hasAddedHeader) {
                 // Strip any leading punctuation/symbols the LLM outputs before the first word
                 const strippedCleaned = cleaned.replace(/^[^a-zA-Z0-9\u0400-\u04FF\n@#]+/, '');
-                const firstContent = this.header ? this.header + strippedCleaned : strippedCleaned;
-                this.stack.push(`llm:\n${firstContent}`);
+                this.stack.push(`llm:\n${strippedCleaned}`);
                 hasAddedHeader = true;
               } else {
                 this.stack[this.stack.length - 1] += cleaned;
@@ -1321,14 +1387,12 @@
         const modelEl = document.getElementById('edit-model');
         const codeEl = document.getElementById('edit-code');
         const keyEl = document.getElementById('edit-key');
-        const headerEl = document.getElementById('edit-header');
         const preferenceEl = document.getElementById('edit-preference');
         
         let currentEndpoint = this.modelEndpoint;
         let currentModel = this.model;
         let currentCodeDisplay = '';
         let currentKeyDisplay = '';
-        let currentHeader = this.header;
         let currentPreference = this.preference;
         
         if (endpointEl) {
@@ -1387,14 +1451,6 @@
           currentKeyDisplay = (this.apiKey && this.apiKey !== 'NULL' && this.apiKey !== '') ? '•'.repeat(this.apiKey.length) : '';
         }
         
-        if (headerEl) {
-          const headerText = headerEl.textContent;
-          if (headerText !== 'NULL' && headerText !== '' && headerText !== 'Add a header') {
-            currentHeader = headerText;
-            this.header = currentHeader;
-            localStorage.setItem('header', this.header);
-          }
-        }
         if (preferenceEl) {
           const prefText = preferenceEl.textContent.trim();
           if (prefText !== 'NULL' && prefText !== '' && prefText !== 'Make me sound like...') {
@@ -1418,12 +1474,8 @@
         const modelIsDefault = (!currentModel || currentModel === 'grok-4-1-fast-reasoning');
         const endpointDefaultTag = endpointIsDefault ? '<span class="default-tag">[default]</span>' : '';
         const modelDefaultTag = modelIsDefault ? '<span class="default-tag">[default]</span>' : '';
-        const headerDisplay = this.header || 'Add a header';
-        const headerAttr = (this.header || '').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
-        const headerPlaceholder = !this.header ? ' placeholder' : '';
         const voiceDisplay = this.preference || 'Make me sound like...';
         const voicePlaceholder = !this.preference ? ' placeholder' : '';
-        output += '<span class="reverse-video">heading:</span> <span id="edit-header" class="config-value' + headerPlaceholder + '" contenteditable="true" data-raw-header="' + headerAttr + '">' + headerDisplay + '</span>\n';
         output += '<span class="reverse-video">voice:</span> <span id="edit-preference" class="config-value' + voicePlaceholder + '" contenteditable="true">' + voiceDisplay + '</span>\n';
         output += '<span class="reverse-video">code:</span> <span id="edit-code" class="config-value' + codePlaceholder + '" contenteditable="true" data-actual-code="' + (this.accessCode || '') + '">' + codeDisplay + '</span>' + codeRequiredTag + '\n';
         output += '<span class="reverse-video">api key:</span> <span id="edit-key" class="config-value' + keyPlaceholder + '" contenteditable="true" data-actual-key="' + (this.apiKey || '') + '">' + keyDisplay + '</span>' + keyRequiredTag + '\n';
@@ -1466,7 +1518,7 @@
         }
 
         this.display.innerHTML = output;
-        
+
         if (!this.codeFieldBeingEdited) {
           const codeElAfterRender = document.getElementById('edit-code');
           if (codeElAfterRender && this.accessCode && this.accessCode !== 'NULL' && this.accessCode !== '') {
@@ -1503,7 +1555,7 @@
           case State.PROBE_RECOVER_RESPONSE:
             if (cmdLower === '/release') {
               if (this.currentStructure) {
-                this.currentStructure.release(this.header);
+                this.currentStructure.release();
                 return;
               }
             } else if (cmdLower === '/recover') {
@@ -1577,7 +1629,7 @@
           case State.PROBE_RECOVER_EDIT:
             if (cmdLower === '/release') {
               if (this.currentStructure) {
-                this.currentStructure.release(this.header);
+                this.currentStructure.release();
                 this.lastInitiation = null;
                 return;
               }
