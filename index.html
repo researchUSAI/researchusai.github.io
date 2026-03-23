@@ -350,6 +350,7 @@
 
       <button id="clear-btn">Clear</button>
       <button id="back-btn">Back</button>
+      <button id="new-btn">New</button>
       <button id="paste-btn">Paste</button>
     </div>
     <div id="toolbar-row-2">
@@ -433,7 +434,7 @@
         this.accessCode = localStorage.getItem('accessCode') || '';
         this.apiKey = localStorage.getItem('apiKey') || '';
         this.preference = localStorage.getItem('preference') || '';
-        this.truth = localStorage.getItem('truth') === 'false' ? false : true;
+        this.truth = localStorage.getItem('truth') === 'true' ? true : false;
         
         this.dotCount = 0;
         this.dotInterval = null;
@@ -447,6 +448,28 @@
         this.importMode = null;
         this.keyFieldBeingEdited = false;
         this.codeFieldBeingEdited = false;
+
+        // Restore persisted session
+        try {
+          const savedStack = localStorage.getItem('nexus_stack');
+          const savedStructures = localStorage.getItem('nexus_structures');
+          if (savedStack) this.stack = JSON.parse(savedStack);
+          if (savedStructures) {
+            const raw = JSON.parse(savedStructures);
+            this.structures = raw.map(s => {
+              const st = new Structure();
+              st.id = s.id;
+              st.date = s.date;
+              st.day = s.day;
+              st.log = s.log;
+              return st;
+            });
+          }
+          if (this.stack.length > 0 || this.structures.length > 0) {
+            this.state = State.PROBE_RECOVER;
+          }
+        } catch (_) {}
+
         this.setupEvents();
         this.setupDragHandles();
         this.updateDimensions();
@@ -726,6 +749,15 @@
         });
 
 
+        document.getElementById('new-btn').addEventListener('click', () => {
+          if (confirm('Would you like to clear your conversation?')) {
+            this._clearSession();
+            this.input.innerHTML = '';
+            this.render();
+            this.scrollToBottom();
+          }
+        });
+
         document.getElementById('polarity-btn').addEventListener('click', () => {
           this.truth = !this.truth;
           this.updatePolarityButton();
@@ -922,35 +954,7 @@
             const sel = window.getSelection();
             sel.removeAllRanges();
             sel.addRange(range);
-          } else if (e.target.id === 'edit-endpoint' || e.target.id === 'edit-model') {
-            // Select all on focus so user can just start typing to replace
-            const range = document.createRange();
-            range.selectNodeContents(e.target);
-            const sel = window.getSelection();
-            sel.removeAllRanges();
-            sel.addRange(range);
           }
-        }, true);
-
-        // Strip formatting on paste for all config fields
-        this.display.addEventListener('paste', (e) => {
-          const target = e.target;
-          const configIds = ['edit-key','edit-code','edit-preference','edit-endpoint','edit-model'];
-          if (!configIds.includes(target.id)) return;
-          e.preventDefault();
-          const plain = (e.clipboardData || window.clipboardData).getData('text/plain').trim();
-          if (!plain) return;
-          target.textContent = plain;
-          // Move cursor to end
-          const range = document.createRange();
-          range.selectNodeContents(target);
-          range.collapse(false);
-          const sel = window.getSelection();
-          sel.removeAllRanges();
-          sel.addRange(range);
-          // Trigger input event so save logic fires
-          target.dispatchEvent(new Event('input', { bubbles: true }));
-          target.dispatchEvent(new Event('blur', { bubbles: true }));
         }, true);
 
         this.display.addEventListener('input', (e) => {
@@ -1228,6 +1232,28 @@
         }
       }
 
+      _persistSession() {
+        try {
+          localStorage.setItem('nexus_stack', JSON.stringify(this.stack));
+          localStorage.setItem('nexus_structures', JSON.stringify(this.structures.map(s => ({
+            id: s.id, date: s.date, day: s.day, log: s.log
+          }))));
+        } catch (_) {}
+      }
+
+      _clearSession() {
+        this.structures = [];
+        this.currentStructure = new Structure();
+        this.stack = [];
+        this.lastInitiation = null;
+        this.lastActionWasFileDrop = false;
+        this.state = State.PROBE_RECOVER;
+        try {
+          localStorage.removeItem('nexus_stack');
+          localStorage.removeItem('nexus_structures');
+        } catch (_) {}
+      }
+
       async coordinate(probe) {
         const isValid = await this.validateCode();
         if (!isValid) {
@@ -1243,31 +1269,31 @@
           return null;
         }
 
-        let fullProbe = '';
-        if (this.structures.length > 0) {
-          for (const structure of this.structures) {
-            for (const entry of structure.log) {
-              if (entry.type === 'initiation') {
-                fullProbe += `user:\n${entry.probe}\n`;
-              } else if (entry.type === 'response') {
-                fullProbe += `llm:\n${entry.probe}\n`;
-              }
+        // Build proper messages array — system prompt injected once by terraformer
+        const messages = [];
+        for (const structure of this.structures) {
+          for (const entry of structure.log) {
+            if (entry.type === 'initiation') {
+              messages.push({ role: 'user', content: entry.probe });
+            } else if (entry.type === 'response') {
+              messages.push({ role: 'assistant', content: entry.probe });
             }
           }
         }
-        
-        if (this.stack.length > 0) {
-          fullProbe += this.stack.join('');
+        for (const line of this.stack) {
+          if (line.startsWith('user:\n')) {
+            messages.push({ role: 'user', content: line.slice('user:\n'.length) });
+          } else if (line.startsWith('llm:\n')) {
+            messages.push({ role: 'assistant', content: line.slice('llm:\n'.length) });
+          }
         }
-        
-  
-        
+
         try {
           const response = await fetch(`${this.localBackend}/generate_prompt`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
-              probe: fullProbe,
+              messages,
               truth: this.truth,
               toxic: 'positive',
               sentence_count: 'off',
@@ -1428,6 +1454,7 @@
 
           const completeResponse = this.stack[this.stack.length - 1].slice('llm:\n'.length);
           this.currentStructure.addResponse(completeResponse);
+          this._persistSession();
 
           return completeResponse;
         } catch (e) {
@@ -1660,6 +1687,7 @@
             } else {
               this.stack.push(`user:\n${cmd}`);
               this.currentStructure.addInitiation(cmd);
+              this._persistSession();
               this.lastActionWasFileDrop = false;
               this.state = State.PROBE_WAIT;
               this.render();
@@ -1710,6 +1738,7 @@
               if (cmd) {
                 this.stack.push(`user:\n${cmd}`);
                 this.currentStructure.addInitiation(cmd);
+                this._persistSession();
               }
               this.lastActionWasFileDrop = false;
               this.state = State.PROBE_WAIT;
