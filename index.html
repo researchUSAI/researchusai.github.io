@@ -922,7 +922,35 @@
             const sel = window.getSelection();
             sel.removeAllRanges();
             sel.addRange(range);
+          } else if (e.target.id === 'edit-endpoint' || e.target.id === 'edit-model') {
+            // Select all on focus so user can just start typing to replace
+            const range = document.createRange();
+            range.selectNodeContents(e.target);
+            const sel = window.getSelection();
+            sel.removeAllRanges();
+            sel.addRange(range);
           }
+        }, true);
+
+        // Strip formatting on paste for all config fields
+        this.display.addEventListener('paste', (e) => {
+          const target = e.target;
+          const configIds = ['edit-key','edit-code','edit-preference','edit-endpoint','edit-model'];
+          if (!configIds.includes(target.id)) return;
+          e.preventDefault();
+          const plain = (e.clipboardData || window.clipboardData).getData('text/plain').trim();
+          if (!plain) return;
+          target.textContent = plain;
+          // Move cursor to end
+          const range = document.createRange();
+          range.selectNodeContents(target);
+          range.collapse(false);
+          const sel = window.getSelection();
+          sel.removeAllRanges();
+          sel.addRange(range);
+          // Trigger input event so save logic fires
+          target.dispatchEvent(new Event('input', { bubbles: true }));
+          target.dispatchEvent(new Event('blur', { bubbles: true }));
         }, true);
 
         this.display.addEventListener('input', (e) => {
