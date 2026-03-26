@@ -336,14 +336,13 @@
 <body>
   <div id="toolbar">
     <div id="toolbar-row-1">
+      <button id="support-btn" onclick="window.open('https://ko-fi.com/usai','_blank')">Support U.S.A.I</button>
       <button id="export-btn">Export</button>
       <button id="import-btn">Import</button>
       <button id="import-cancel-btn" style="display:none">Cancel</button>
       <button id="import-return-btn" style="display:none">Return to Conversation</button>
       <button id="import-source-btn" style="display:none">Add as Source</button>
       <input type="file" id="import-input" accept=".txt" style="display:none">
-      <button id="support-btn">Get Code</button>
-      <button id="pastecode-btn">Paste Code</button>
       <button id="getkey-btn">Get API Key</button>
       <button id="pastekey-btn">Paste API Key</button>
       <button id="polarity-btn">Short Form</button>
@@ -431,7 +430,6 @@
         
         this.modelEndpoint = localStorage.getItem('modelEndpoint') || 'https://api.x.ai';
         this.model = localStorage.getItem('model') || 'grok-4-1-fast-reasoning';
-        this.accessCode = localStorage.getItem('accessCode') || '';
         this.apiKey = localStorage.getItem('apiKey') || '';
         this.preference = localStorage.getItem('preference') || '';
         this.truth = localStorage.getItem('truth') === 'true' ? true : false;
@@ -447,7 +445,6 @@
         this.lastActionWasFileDrop = false;
         this.importMode = null;
         this.keyFieldBeingEdited = false;
-        this.codeFieldBeingEdited = false;
 
         // Restore persisted session
         try {
@@ -856,39 +853,12 @@
           }
         });
 
-        document.getElementById('support-btn').addEventListener('click', () => {
-          window.open('https://ko-fi.com/s/c95d095bc5', '_blank');
-        });
-
+        
         document.getElementById('getkey-btn').addEventListener('click', () => {
           window.open('https://console.x.ai/team/4e4cc61f-c596-41c2-91ab-78a1258ac206', '_blank');
         });
 
-        document.getElementById('pastecode-btn').addEventListener('click', async () => {
-          const btn = document.getElementById('pastecode-btn');
-          if (btn.textContent === 'Pasted!') return;
-          try {
-            const text = await navigator.clipboard.readText();
-            if (text) {
-              const trimmedCode = text.trim();
-              if (trimmedCode) {
-                this.accessCode = trimmedCode;
-                localStorage.setItem('accessCode', this.accessCode);
-                const codeEl = document.getElementById('edit-code');
-                if (codeEl) {
-                  codeEl.textContent = trimmedCode;
-                  codeEl.setAttribute('data-actual-code', trimmedCode);
-                }
-                this.render();
-                btn.textContent = 'Pasted!';
-                setTimeout(() => { btn.textContent = 'Paste Code'; }, 1000);
-              }
-            }
-          } catch (err) {
-            alert('Paste failed. Please copy your access code first, then try again.');
-          }
-        });
-
+        
         document.getElementById('pastekey-btn').addEventListener('click', async () => {
           const btn = document.getElementById('pastekey-btn');
           if (btn.textContent === 'Pasted!') return;
@@ -930,19 +900,7 @@
             const sel = window.getSelection();
             sel.removeAllRanges();
             sel.addRange(range);
-          } else if (e.target.id === 'edit-code') {
-            this.codeFieldBeingEdited = true;
-            const codeText = e.target.textContent.trim();
-            const actualCode = e.target.getAttribute('data-actual-code');
-            if (codeText.match(/^•+$/) && actualCode) {
-              e.target.textContent = actualCode;
-            }
-            const range = document.createRange();
-            range.selectNodeContents(e.target);
-            range.collapse(false);
-            const sel = window.getSelection();
-            sel.removeAllRanges();
-            sel.addRange(range);
+
           } else if (e.target.id === 'edit-preference') {
             const val = e.target.textContent.trim();
             if (val === 'Make me sound like...') {
@@ -1008,12 +966,8 @@
             const saved = this.input.innerHTML;
             this.render();
             this.input.innerHTML = saved;
-          } else if (e.target.id === 'edit-code') {
-            this.codeFieldBeingEdited = false;
-            const saved = this.input.innerHTML;
-            this.render();
-            this.input.innerHTML = saved;
           }
+
         }, true);
       }
 
@@ -1204,33 +1158,7 @@
         }).join('');
       }
 
-      async validateCode() {
-        const FAMILY_CODE = 'researchthefuture0612';
-        if (this.accessCode === FAMILY_CODE) return true;
-        if (!this.accessCode || this.accessCode === 'NULL') {
-          alert('Please enter your access code in the code: field.\nPurchase a code at ko-fi.com/researchkofi');
-          return false;
-        }
-        try {
-          const response = await fetch(`${this.localBackend}/validate_code?code=${encodeURIComponent(this.accessCode)}`);
-          if (!response.ok) {
-            alert('Could not validate access code. Server error. Try again.');
-            return false;
-          }
-          const data = await response.json();
-          if (!data.valid) {
-            alert(data.message || 'Invalid or expired code.\nPurchase a new code at ko-fi.com/researchkofi');
-            return false;
-          }
-          if (data.days_left !== 9999 && data.days_left <= 5) {
-            alert(`Your access code expires in ${data.days_left} day(s).\nPurchase a new code soon at ko-fi.com/researchkofi`);
-          }
-          return true;
-        } catch (e) {
-          console.warn('Code validation network error:', e);
-          return true;
-        }
-      }
+
 
       _persistSession() {
         try {
@@ -1255,19 +1183,6 @@
       }
 
       async coordinate(probe) {
-        const isValid = await this.validateCode();
-        if (!isValid) {
-          if (this.stack.length > 0 && this.stack[this.stack.length - 1] === `user:\n${probe}`) {
-            this.stack.pop();
-          }
-          if (this.currentStructure.log.length > 0 && this.currentStructure.log[this.currentStructure.log.length - 1].type === 'initiation') {
-            this.currentStructure.log.pop();
-          }
-          this.state = State.PROBE_RECOVER;
-          this.stopWait();
-          this.render();
-          return null;
-        }
 
         // Build proper messages array — system prompt injected once by terraformer
         const messages = [];
@@ -1465,13 +1380,12 @@
       render() {
         const endpointEl = document.getElementById('edit-endpoint');
         const modelEl = document.getElementById('edit-model');
-        const codeEl = document.getElementById('edit-code');
+
         const keyEl = document.getElementById('edit-key');
         const preferenceEl = document.getElementById('edit-preference');
         
         let currentEndpoint = this.modelEndpoint;
         let currentModel = this.model;
-        let currentCodeDisplay = '';
         let currentKeyDisplay = '';
         let currentPreference = this.preference;
         
@@ -1498,21 +1412,6 @@
             this.model = currentModel;
             localStorage.setItem('model', this.model);
           }
-        }
-        if (codeEl && !this.codeFieldBeingEdited) {
-          const codeText = codeEl.textContent.trim();
-          if (codeText === '' || codeText === 'enter access code') {
-            this.accessCode = '';
-            localStorage.removeItem('accessCode');
-          } else if (!codeText.match(/^•+$/) && codeText !== 'NULL') {
-            this.accessCode = codeText;
-            localStorage.setItem('accessCode', this.accessCode);
-          }
-          currentCodeDisplay = (this.accessCode && this.accessCode !== 'NULL' && this.accessCode !== '') ? '•'.repeat(this.accessCode.length) : '';
-        } else if (codeEl) {
-          currentCodeDisplay = codeEl.textContent;
-        } else {
-          currentCodeDisplay = (this.accessCode && this.accessCode !== 'NULL' && this.accessCode !== '') ? '•'.repeat(this.accessCode.length) : '';
         }
         
         if (keyEl && !this.keyFieldBeingEdited) {
@@ -1544,9 +1443,6 @@
         const structures = this.formatStructures();
         let blockInput = false;
 
-        const codePlaceholder = (!this.accessCode || this.accessCode === 'NULL' || this.accessCode === '') ? ' placeholder' : '';
-        const codeDisplay = codePlaceholder ? 'enter access code' : currentCodeDisplay;
-        const codeRequiredTag = codePlaceholder ? '<span class="default-tag">[required]</span>' : '';
         const keyPlaceholder = (!this.apiKey || this.apiKey === 'NULL' || this.apiKey === '') ? ' placeholder' : '';
         const keyDisplay = keyPlaceholder ? 'enter your api key' : currentKeyDisplay;
         const keyRequiredTag = keyPlaceholder ? '<span class="default-tag">[required]</span>' : '';
@@ -1557,8 +1453,7 @@
         const voiceDisplay = this.preference || 'Make me sound like...';
         const voicePlaceholder = !this.preference ? ' placeholder' : '';
         output += '<span class="reverse-video">voice:</span> <span id="edit-preference" class="config-value' + voicePlaceholder + '" contenteditable="true">' + voiceDisplay + '</span>\n';
-        output += '<span class="reverse-video">code:</span> <span id="edit-code" class="config-value' + codePlaceholder + '" contenteditable="true" data-actual-code="' + (this.accessCode || '') + '">' + codeDisplay + '</span>' + codeRequiredTag + '\n';
-        output += '<span class="reverse-video">api key:</span> <span id="edit-key" class="config-value' + keyPlaceholder + '" contenteditable="true" data-actual-key="' + (this.apiKey || '') + '">' + keyDisplay + '</span>' + keyRequiredTag + '\n';
+                output += '<span class="reverse-video">api key:</span> <span id="edit-key" class="config-value' + keyPlaceholder + '" contenteditable="true" data-actual-key="' + (this.apiKey || '') + '">' + keyDisplay + '</span>' + keyRequiredTag + '\n';
         output += '<span class="reverse-video">endpoint:</span> <span id="edit-endpoint" class="config-value" contenteditable="true">' + (currentEndpoint || 'https://api.x.ai') + '</span>' + endpointDefaultTag + '\n';
         output += '<span class="reverse-video">model:</span> <span id="edit-model" class="config-value" contenteditable="true">' + (currentModel || 'grok-4-1-fast-reasoning') + '</span>' + modelDefaultTag + '\n';
         output += '<div class="message-separator"></div>';
@@ -1599,12 +1494,7 @@
 
         this.display.innerHTML = output;
 
-        if (!this.codeFieldBeingEdited) {
-          const codeElAfterRender = document.getElementById('edit-code');
-          if (codeElAfterRender && this.accessCode && this.accessCode !== 'NULL' && this.accessCode !== '') {
-            codeElAfterRender.textContent = '•'.repeat(this.accessCode.length);
-          }
-        }
+
         
         if (!this.keyFieldBeingEdited) {
           const keyElAfterRender = document.getElementById('edit-key');
