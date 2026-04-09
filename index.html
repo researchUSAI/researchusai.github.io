@@ -462,6 +462,15 @@
               return st;
             });
           }
+          const savedCurrent = localStorage.getItem('nexus_current_structure');
+          if (savedCurrent) {
+            const sc = JSON.parse(savedCurrent);
+            this.currentStructure = new Structure();
+            this.currentStructure.id = sc.id;
+            this.currentStructure.date = sc.date;
+            this.currentStructure.day = sc.day;
+            this.currentStructure.log = sc.log;
+          }
           if (this.stack.length > 0 || this.structures.length > 0) {
             this.state = State.PROBE_RECOVER;
           }
@@ -732,6 +741,7 @@
                   this.currentStructure.log.pop();
                 }
                 this.state = State.PROBE_RECOVER_EDIT;
+                this._persistSession();
               } else {
                 this.lastInitiation = '';
                 this.state = State.PROBE_RECOVER;
@@ -1166,6 +1176,12 @@
           localStorage.setItem('nexus_structures', JSON.stringify(this.structures.map(s => ({
             id: s.id, date: s.date, day: s.day, log: s.log
           }))));
+          localStorage.setItem('nexus_current_structure', JSON.stringify({
+            id: this.currentStructure.id,
+            date: this.currentStructure.date,
+            day: this.currentStructure.day,
+            log: this.currentStructure.log
+          }));
         } catch (_) {}
       }
 
@@ -1179,6 +1195,7 @@
         try {
           localStorage.removeItem('nexus_stack');
           localStorage.removeItem('nexus_structures');
+          localStorage.removeItem('nexus_current_structure');
         } catch (_) {}
       }
 
