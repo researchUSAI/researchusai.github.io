@@ -1442,7 +1442,7 @@
         const modelDefaultTag = modelIsDefault ? '<span class="default-tag">[default]</span>' : '';
         const voiceDisplay = this.preference || 'Make me sound like...';
         const voicePlaceholder = !this.preference ? ' placeholder' : '';
-        output += '<span class="reverse-video">system prompt:</span> <span id="edit-preference" class="config-value' + voicePlaceholder + '" contenteditable="true">' + voiceDisplay + '</span>\n';
+        output += '<span class="reverse-video">bias:</span> <span id="edit-preference" class="config-value' + voicePlaceholder + '" contenteditable="true">' + voiceDisplay + '</span>\n';
                 output += '<span class="reverse-video">api key:</span> <span id="edit-key" class="config-value' + keyPlaceholder + '" contenteditable="true" data-actual-key="' + (this.apiKey || '') + '">' + keyDisplay + '</span>' + keyRequiredTag + '\n';
         output += '<span class="reverse-video">endpoint:</span> <span id="edit-endpoint" class="config-value" contenteditable="true">' + (currentEndpoint || 'https://api.x.ai') + '</span>' + endpointDefaultTag + '\n';
         output += '<span class="reverse-video">model:</span> <span id="edit-model" class="config-value" contenteditable="true">' + (currentModel || 'grok-4-1-fast-reasoning') + '</span>' + modelDefaultTag + '\n';
