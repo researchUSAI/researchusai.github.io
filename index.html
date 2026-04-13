@@ -699,58 +699,31 @@
             this.state = State.PROBE_RECOVER;
             this.render();
             this.scrollToBottom();
-          } else if (this.state === State.PROBE_RECOVER_EDIT && this.stack.length > 0) {
-            if (confirm('Go back and edit an earlier message?')) {
-              if (this.stack.length > 0 && this.currentStructure.log.length > 0) {
-                if (this.stack[this.stack.length - 1].startsWith('llm:\n')) {
-                  this.stack.pop();
-                }
-                if (this.currentStructure.log[this.currentStructure.log.length - 1].type === 'response') {
-                  this.currentStructure.log.pop();
-                }
-                if (this.stack.length > 0 && this.stack[this.stack.length - 1].startsWith('user:\n')) {
-                  this.lastInitiation = this.stack[this.stack.length - 1].slice('user:\n'.length);
-                  this.stack.pop();
-                } else {
-                  this.lastInitiation = '';
-                }
-                if (this.currentStructure.log.length > 0 && this.currentStructure.log[this.currentStructure.log.length - 1].type === 'initiation') {
-                  this.currentStructure.log.pop();
-                }
-                this.state = State.PROBE_RECOVER_EDIT;
-              }
-              this.render();
-              this.scrollToBottom();
-            }
           } else if (this.stack.length > 0) {
-            if (confirm('Go back and edit the last message?')) {
-              if (this.stack.length > 0 && this.currentStructure.log.length > 0) {
-                if (this.stack[this.stack.length - 1].startsWith('llm:\n')) {
-                  this.stack.pop();
-                }
-                if (this.currentStructure.log[this.currentStructure.log.length - 1].type === 'response') {
-                  this.currentStructure.log.pop();
-                }
-                if (this.stack.length > 0 && this.stack[this.stack.length - 1].startsWith('user:\n')) {
-                  this.lastInitiation = this.stack[this.stack.length - 1].slice('user:\n'.length);
-                  this.stack.pop();
-                } else {
-                  this.lastInitiation = '';
-                }
-                if (this.currentStructure.log.length > 0 && this.currentStructure.log[this.currentStructure.log.length - 1].type === 'initiation') {
-                  this.currentStructure.log.pop();
-                }
-                this.state = State.PROBE_RECOVER_EDIT;
-                this._persistSession();
-              } else {
-                this.lastInitiation = '';
-                this.state = State.PROBE_RECOVER;
+            // Pop llm response if present
+            if (this.stack[this.stack.length - 1].startsWith('llm:\n')) {
+              this.stack.pop();
+              if (this.currentStructure.log.length > 0 && this.currentStructure.log[this.currentStructure.log.length - 1].type === 'response') {
+                this.currentStructure.log.pop();
               }
-            } else {
-              this.lastInitiation = null;
-              this.state = State.PROBE_RECOVER;
             }
+            // Pop user query and load it into input
+            let lastQuery = '';
+            if (this.stack.length > 0 && this.stack[this.stack.length - 1].startsWith('user:\n')) {
+              lastQuery = this.stack[this.stack.length - 1].slice('user:\n'.length);
+              this.stack.pop();
+              if (this.currentStructure.log.length > 0 && this.currentStructure.log[this.currentStructure.log.length - 1].type === 'initiation') {
+                this.currentStructure.log.pop();
+              }
+            }
+            this._persistSession();
+            this.state = State.PROBE_RECOVER;
             this.render();
+            // Load the last query directly into the input field
+            if (lastQuery) {
+              this.input.textContent = lastQuery;
+              this.normalizeInput();
+            }
             this.scrollToBottom();
           }
         });
@@ -1469,7 +1442,7 @@
         const modelDefaultTag = modelIsDefault ? '<span class="default-tag">[default]</span>' : '';
         const voiceDisplay = this.preference || 'Make me sound like...';
         const voicePlaceholder = !this.preference ? ' placeholder' : '';
-        output += '<span class="reverse-video">bias:</span> <span id="edit-preference" class="config-value' + voicePlaceholder + '" contenteditable="true">' + voiceDisplay + '</span>\n';
+        output += '<span class="reverse-video">system prompt:</span> <span id="edit-preference" class="config-value' + voicePlaceholder + '" contenteditable="true">' + voiceDisplay + '</span>\n';
                 output += '<span class="reverse-video">api key:</span> <span id="edit-key" class="config-value' + keyPlaceholder + '" contenteditable="true" data-actual-key="' + (this.apiKey || '') + '">' + keyDisplay + '</span>' + keyRequiredTag + '\n';
         output += '<span class="reverse-video">endpoint:</span> <span id="edit-endpoint" class="config-value" contenteditable="true">' + (currentEndpoint || 'https://api.x.ai') + '</span>' + endpointDefaultTag + '\n';
         output += '<span class="reverse-video">model:</span> <span id="edit-model" class="config-value" contenteditable="true">' + (currentModel || 'grok-4-1-fast-reasoning') + '</span>' + modelDefaultTag + '\n';
