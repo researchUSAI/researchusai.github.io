@@ -1174,7 +1174,7 @@
 
       async coordinate(probe) {
 
-        // Build proper messages array — system prompt injected once by terraformer
+        // Build proper messages array
         const messages = [];
         for (const structure of this.structures) {
           for (const entry of structure.log) {
@@ -1217,144 +1217,25 @@
           }
 
           const reader = response.body.getReader();
+          const decoder = new TextDecoder();
           let hasAddedHeader = false;
-
-          // ── Output cleaning ───────────────────────────────────────────────
-          // cleanChunk: strip **, replace em dash with \n\n, collapse 3+ newlines.
-          // autoFormat: after a \n\n, ensure the preceding sentence ends with
-          //   a period (adds one if the last non-space char isn't punctuation)
-          //   and capitalizes the very first letter that follows the break.
-          //   Works across chunk boundaries via a persistent `pendingCap` flag.
-          //
-          // Carry buffer (last 20 chars held back each chunk) ensures that
-          // ** / em dash / \n\n / period+emoji sequences can't be
-          // split across two chunks and missed.
-          // 20 chars covers: period + space + flag emoji (8 bytes) + modifier sequences
-          // ─────────────────────────────────────────────────────────────────
-          const PUNCT = /[^a-zA-Z0-9\u0400-\u04FF]$/;  // any non-alphanumeric = already terminated
-
-          const cleanChunk = (text) => {
-            text = text.replace(/\*\*/g, '');
-            text = text.replace(/(@\w+)\s*[\u2013\u2014]\s*/g, '$1 ');  // @username— or @username– → just @username + space, no period/break
-            text = text.replace(/\u2014/g, '\x01');  // em dash → sentinel for period+cap+space in autoFormat
-            text = text.replace(/\n{3,}/g, '\n\n');
-            text = text.replace(/ [-\u2013] /g, '\x01');  // word - word (space both sides) → sentinel
-            text = text.replace(/(?<=[a-zA-Z])[-\u2013](?= )/g, '\x01');  // word- word (dash then space) → sentinel
-            text = text.replace(/(?<= )[-\u2013](?=[a-zA-Z])/g, '\x01');  // word -word (space then dash) → sentinel
-            text = text.replace(/(?<=[a-zA-Z_])[-\u2010\u2011\u2012\u2013\u2014\u2015\u2212](?=[a-zA-Z_])/g, ' ');  // letter-dash-letter → space (Mar-a-Lago → Mar a Lago), never touches digit-digit
-            text = text.replace(/(?<!\d)\u2013(?!\d)/g, '\x01');  // en dash (non-numeric) → sentinel (period+cap)
-            text = text.replace(/\.(\s*[\u{1F000}-\u{1FFFF}\u{2600}-\u{27BF}\u{FE00}-\u{FE0F}\u{200D}\u{20E3}\u{E0020}-\u{E007F}]+)/gu, '$1');  // strip period before emojis
-            return text;
-          };
-
-          // Receives already-cleaned text plus a mutable state object.
-          // Returns the formatted text and updates state in place.
-          const autoFormat = (text, state) => {
-            let out = '';
-            let i = 0;
-            while (i < text.length) {
-              const ch = text[i];
-
-              if (state.pendingCap) {
-                // Looking for the first letter/emoji to capitalize after a break — swallow whitespace
-                if (ch === '\n' || ch === ' ') {
-                  // absorb — we already emitted a space before the break
-                  i++;
-                  continue;
-                }
-                // First non-whitespace character after the break
-                if (/[a-z]/.test(ch)) {
-                  out += ch.toUpperCase();
-                } else {
-                  out += ch;
-                }
-                state.pendingCap = false;
-                i++;
-                continue;
-              }
-
-              // Detect \x01 (em dash sentinel) — period + \n\n + capitalize next letter
-              if (ch === '\x01') {
-                const trimmed = out.trimEnd();
-                if (trimmed.length > 0 && !PUNCT.test(trimmed)) {
-                  out = trimmed + '.';
-                }
-                out += '\n\n';
-                state.pendingCap = true;
-                i++;
-                continue;
-              }
-
-              // Detect \n\n — preserve as line break + capitalize next letter
-              if (ch === '\n' && i + 1 < text.length && text[i + 1] === '\n') {
-                const trimmed = out.trimEnd();
-                if (trimmed.length > 0 && !PUNCT.test(trimmed)) {
-                  out = trimmed + '.';
-                } else if (trimmed.length > 0) {
-                  out = trimmed;
-                }
-                out += '\n\n';
-                state.pendingCap = true;
-                i += 2;
-                while (i < text.length && text[i] === '\n') i++;
-                continue;
-              }
-
-              // Detect single \n — preserve as line break + capitalize next letter
-              if (ch === '\n') {
-                const trimmed = out.trimEnd();
-                if (trimmed.length > 0 && !PUNCT.test(trimmed)) {
-                  out = trimmed + '.';
-                } else if (trimmed.length > 0) {
-                  out = trimmed;
-                }
-                out += '\n\n';
-                state.pendingCap = true;
-                i++;
-                while (i < text.length && text[i] === '\n') i++;
-                continue;
-              }
-
-              out += ch;
-              i++;
-            }
-            return out;
-          };
-
-          // formatState persists pendingCap across chunks
-          const formatState = { pendingCap: false };
-          let carry = '';
 
           while (true) {
             const { done, value } = await reader.read();
+            if (done) break;
 
-            let cleaned = '';
-            if (!done) {
-              const raw = carry + new TextDecoder().decode(value);
-              // Hold back last 20 chars: covers period + emoji across boundary
-              const safe = raw.length > 20 ? raw.slice(0, -20) : '';
-              carry      = raw.length > 20 ? raw.slice(-20)    : raw;
-              cleaned = autoFormat(cleanChunk(safe), formatState);
-            } else {
-              // Flush carry on stream end
-              cleaned = autoFormat(cleanChunk(carry), formatState);
-              carry = '';
-            }
+            const chunk = decoder.decode(value, { stream: true });
 
-            if (cleaned) {
+            if (chunk) {
               if (!hasAddedHeader) {
-                // Strip any leading punctuation/symbols the LLM outputs before the first word
-                const strippedCleaned = cleaned.replace(/^[^a-zA-Z0-9\u0400-\u04FF\n@#]+/, '');
-                this.stack.push(`llm:\n${strippedCleaned}`);
+                this.stack.push(`llm:\n${chunk}`);
                 hasAddedHeader = true;
               } else {
-                this.stack[this.stack.length - 1] += cleaned;
+                this.stack[this.stack.length - 1] += chunk;
               }
               this.render();
               this.scrollToBottom();
             }
-
-            if (done) break;
           }
 
           const completeResponse = this.stack[this.stack.length - 1].slice('llm:\n'.length);
