@@ -428,8 +428,8 @@
         this.stack = [];
         this.localBackend = 'https://researchnexus.onrender.com';
         
-        this.modelEndpoint = localStorage.getItem('modelEndpoint') || 'https://api.x.ai';
-        this.model = localStorage.getItem('model') || 'grok-4-1-fast-reasoning';
+        this.modelEndpoint = localStorage.getItem('modelEndpoint') || 'https://api.openai.com';
+        this.model = localStorage.getItem('model') || 'gpt-5.4-nano';
         this.apiKey = localStorage.getItem('apiKey') || '';
         this.preference = localStorage.getItem('preference') || '';
         this.truth = localStorage.getItem('truth') === 'true' ? true : false;
@@ -838,7 +838,7 @@
 
         
         document.getElementById('getkey-btn').addEventListener('click', () => {
-          window.open('https://console.x.ai/team/4e4cc61f-c596-41c2-91ab-78a1258ac206', '_blank');
+          window.open('https://platform.openai.com', '_blank');
         });
 
         
@@ -921,7 +921,7 @@
           }
           if (e.target.id === 'edit-endpoint') {
             const val = e.target.textContent.trim();
-            const isDefault = (val === '' || val === 'https://api.x.ai');
+            const isDefault = (val === '' || val === 'https://api.openai.com');
             // Update or insert the sibling default tag
             let tagEl = e.target.nextElementSibling;
             if (tagEl && tagEl.classList.contains('default-tag')) tagEl.remove();
@@ -934,7 +934,7 @@
           }
           if (e.target.id === 'edit-model') {
             const val = e.target.textContent.trim();
-            const isDefault = (val === '' || val === 'grok-4-1-fast-reasoning');
+            const isDefault = (val === '' || val === 'gpt-5.4-nano');
             let tagEl = e.target.nextElementSibling;
             if (tagEl && tagEl.classList.contains('default-tag')) tagEl.remove();
             if (isDefault) {
@@ -1263,7 +1263,7 @@
         if (endpointEl) {
           const endpointText = endpointEl.textContent.trim();
           if (endpointText === '' || endpointText === 'NULL') {
-            this.modelEndpoint = 'https://api.x.ai';
+            this.modelEndpoint = 'https://api.openai.com';
             localStorage.removeItem('modelEndpoint');
             currentEndpoint = this.modelEndpoint;
           } else {
@@ -1275,7 +1275,7 @@
         if (modelEl) {
           const modelText = modelEl.textContent.trim();
           if (modelText === '' || modelText === 'NULL') {
-            this.model = 'grok-4-1-fast-reasoning';
+            this.model = 'gpt-5.4-nano';
             localStorage.removeItem('model');
             currentModel = this.model;
           } else {
@@ -1317,16 +1317,16 @@
         const keyPlaceholder = (!this.apiKey || this.apiKey === 'NULL' || this.apiKey === '') ? ' placeholder' : '';
         const keyDisplay = keyPlaceholder ? 'enter your api key' : currentKeyDisplay;
         const keyRequiredTag = keyPlaceholder ? '<span class="default-tag">[required]</span>' : '';
-        const endpointIsDefault = (!currentEndpoint || currentEndpoint === 'https://api.x.ai');
-        const modelIsDefault = (!currentModel || currentModel === 'grok-4-1-fast-reasoning');
+        const endpointIsDefault = (!currentEndpoint || currentEndpoint === 'https://api.openai.com');
+        const modelIsDefault = (!currentModel || currentModel === 'gpt-5.4-nano');
         const endpointDefaultTag = endpointIsDefault ? '<span class="default-tag">[default]</span>' : '';
         const modelDefaultTag = modelIsDefault ? '<span class="default-tag">[default]</span>' : '';
         const voiceDisplay = this.preference || 'Make me sound like...';
         const voicePlaceholder = !this.preference ? ' placeholder' : '';
         output += '<span class="reverse-video">bias:</span> <span id="edit-preference" class="config-value' + voicePlaceholder + '" contenteditable="true">' + voiceDisplay + '</span>\n';
                 output += '<span class="reverse-video">api key:</span> <span id="edit-key" class="config-value' + keyPlaceholder + '" contenteditable="true" data-actual-key="' + (this.apiKey || '') + '">' + keyDisplay + '</span>' + keyRequiredTag + '\n';
-        output += '<span class="reverse-video">endpoint:</span> <span id="edit-endpoint" class="config-value" contenteditable="true">' + (currentEndpoint || 'https://api.x.ai') + '</span>' + endpointDefaultTag + '\n';
-        output += '<span class="reverse-video">model:</span> <span id="edit-model" class="config-value" contenteditable="true">' + (currentModel || 'grok-4-1-fast-reasoning') + '</span>' + modelDefaultTag + '\n';
+        output += '<span class="reverse-video">endpoint:</span> <span id="edit-endpoint" class="config-value" contenteditable="true">' + (currentEndpoint || 'https://api.openai.com') + '</span>' + endpointDefaultTag + '\n';
+        output += '<span class="reverse-video">model:</span> <span id="edit-model" class="config-value" contenteditable="true">' + (currentModel || 'gpt-5.4-nano') + '</span>' + modelDefaultTag + '\n';
         output += '<div class="message-separator"></div>';
 
         switch(this.state) {
@@ -1349,10 +1349,10 @@
             if (this.stack.length > 0) output += this.formatStack();
             break;
           case State.CALIBRATE_ENDPOINT_RECOVER:
-            output += '/route\n<span class="reverse-video">endpoint: ' + (this.modelEndpoint || 'https://api.x.ai') + '</span>';
+            output += '/route\n<span class="reverse-video">endpoint: ' + (this.modelEndpoint || 'https://api.openai.com') + '</span>';
             break;
           case State.CALIBRATE_MODEL_RECOVER:
-            output += '/route\n<span class="reverse-video">model: ' + (this.model || 'grok-4-1-fast-reasoning') + '</span>';
+            output += '/route\n<span class="reverse-video">model: ' + (this.model || 'gpt-5.4-nano') + '</span>';
             break;
           case State.CALIBRATE_KEY_RECOVER:
             output += '/route\n<span class="reverse-video">api key: ' + (this.apiKey || 'NULL') + '</span>';
