@@ -1128,25 +1128,48 @@
 
           const reader = response.body.getReader();
           const decoder = new TextDecoder();
+
+          // Typewriter reveal. Network chunks (token bursts) fill a queue; a
+          // timer drains it one character per tick, so the response appears
+          // letter-by-letter at a steady cadence no matter how the bytes arrive.
+          const TYPE_MS = 25;   // ms per character — brisk typewriter; visible but not slow
+          let queue = '';
+          let streamDone = false;
           let hasAddedHeader = false;
 
-          while (true) {
-            const { done, value } = await reader.read();
-            if (done) break;
-
-            const chunk = decoder.decode(value, { stream: true });
-
-            if (chunk) {
-              if (!hasAddedHeader) {
-                this.stack.push(`llm:\n${chunk}`);
-                hasAddedHeader = true;
-              } else {
-                this.stack[this.stack.length - 1] += chunk;
+          const reveal = new Promise((resolve) => {
+            const timer = setInterval(() => {
+              if (queue.length) {
+                const ch = queue[0];
+                queue = queue.slice(1);
+                if (!hasAddedHeader) {
+                  this.stack.push(`llm:\n${ch}`);
+                  hasAddedHeader = true;
+                } else {
+                  this.stack[this.stack.length - 1] += ch;
+                }
+                this.render();
+                this.scrollToBottom();
+              } else if (streamDone) {
+                clearInterval(timer);
+                resolve();
               }
-              this.render();
-              this.scrollToBottom();
+            }, TYPE_MS);
+          });
+
+          const pump = (async () => {
+            while (true) {
+              const { done, value } = await reader.read();
+              if (done) break;
+              const chunk = decoder.decode(value, { stream: true });
+              if (chunk) queue += chunk;
             }
-          }
+            streamDone = true;
+          })();
+
+          await Promise.all([pump, reveal]);
+
+          if (!hasAddedHeader) this.stack.push('llm:\n');
 
           const completeResponse = this.stack[this.stack.length - 1].slice('llm:\n'.length);
           this.currentStructure.addResponse(completeResponse);
