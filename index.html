@@ -239,6 +239,12 @@
       font-weight: bold;
       text-shadow: none;
     }
+    /* The masked api key is one long run of bullets; break it between any
+       characters so it starts inline after the label instead of being pushed
+       to the next line. */
+    #edit-key {
+      word-break: break-all;
+    }
     .default-tag {
       color: rgba(150, 123, 96, 0.35);
       font-style: italic;
@@ -412,7 +418,7 @@
         // a placeholder is shown when unset, it clears on focus, and whatever is
         // typed is saved to disk (or removed, reverting to the fallback).
         this.configFields = {
-          'edit-preference': { prop: 'preference',    storeKey: 'preference',    placeholder: 'make me sound like...', fallback: '',                      secret: false },
+          'edit-preference': { prop: 'preference',    storeKey: 'preference',    placeholder: 'Make me sound like...', fallback: '',                      secret: false },
           'edit-key':        { prop: 'apiKey',        storeKey: 'apiKey',        placeholder: 'enter your api key',    fallback: '',                      secret: true  },
           'edit-endpoint':   { prop: 'modelEndpoint', storeKey: 'modelEndpoint', placeholder: 'https://api.openai.com', fallback: 'https://api.openai.com', secret: false },
           'edit-model':      { prop: 'model',         storeKey: 'model',         placeholder: 'gpt-5.4-nano',          fallback: 'gpt-5.4-nano',          secret: false },
