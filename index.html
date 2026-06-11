@@ -1002,12 +1002,21 @@
       }
 
       updateDimensions() {
+        // CHARS_PER_LINE = how many monospace characters span the viewport
+        // width. Higher => more characters per line => smaller text. Lower =>
+        // fewer characters per line => larger text. This is the knob you tune.
+        const CHARS_PER_LINE = 80;
+        // Clamp the result so text never collapses to an unreadable size on a
+        // narrow/collapsed window (or balloon on a very wide one).
+        const MIN_FONT_PX = 15;
+        const MAX_FONT_PX = 24;
+
         this.measure.style.fontSize = '100px';
         const measuredWidth = this.measure.offsetWidth;
         const pixelsPerChar = measuredWidth / 1;
-        const targetWidth = window.innerWidth;
-        const newFontSize = (targetWidth / 50) * (100 / pixelsPerChar);
-        const newLineHeight = window.innerHeight / 24;
+        const rawFontSize = (window.innerWidth / CHARS_PER_LINE) * (100 / pixelsPerChar);
+        const newFontSize = Math.max(MIN_FONT_PX, Math.min(MAX_FONT_PX, rawFontSize));
+        const newLineHeight = newFontSize * 1.6;
         document.body.style.fontSize = `${newFontSize}px`;
         document.body.style.lineHeight = `${newLineHeight}px`;
         setTimeout(() => this.updateInlineCursor(), 0);
