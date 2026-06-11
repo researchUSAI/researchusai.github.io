@@ -6,8 +6,8 @@
   <title>researchusai.com</title>
   <style>
     body {
-      background: #1a1a1f;
-      color: #C8D8F0;
+      background: #EAE0CC;
+      color: #4F4334;
       font-family: 'Courier New', monospace;
       height: 100vh;
       width: 100vw;
@@ -32,7 +32,7 @@
       background: linear-gradient(
         to bottom,
         rgba(255, 255, 255, 0) 50%,
-        rgba(0, 0, 0, 0.1) 50%
+        rgba(79, 67, 52, 0.05) 50%
       );
       background-size: 100% 4px;
       pointer-events: none;
@@ -46,48 +46,25 @@
     @keyframes glow-pulse {
       0%, 100% { 
         box-shadow: 
-          0 0 5px rgba(200, 216, 240, 0.4),
-          0 0 10px rgba(200, 216, 240, 0.3),
-          inset 0 0 5px rgba(200, 216, 240, 0.2);
+          0 0 5px rgba(150, 123, 96, 0.4),
+          0 0 10px rgba(150, 123, 96, 0.3),
+          inset 0 0 5px rgba(150, 123, 96, 0.2);
       }
       50% { 
         box-shadow: 
-          0 0 10px rgba(200, 216, 240, 0.6),
-          0 0 20px rgba(200, 216, 240, 0.5),
-          0 0 30px rgba(200, 216, 240, 0.3),
-          inset 0 0 10px rgba(200, 216, 240, 0.3);
+          0 0 10px rgba(150, 123, 96, 0.6),
+          0 0 20px rgba(150, 123, 96, 0.5),
+          0 0 30px rgba(150, 123, 96, 0.3),
+          inset 0 0 10px rgba(150, 123, 96, 0.3);
       }
     }
     @keyframes border-glow {
-      0%, 100% { border-color: #C8D8F0; }
-      50% { border-color: #D4E3FF; }
+      0%, 100% { border-color: #9C8366; }
+      50% { border-color: #B7C0A0; }
     }
-    /* Blinking cursor */
-    #input::after {
-      content: '█';
-      animation: blink 1s step-end infinite;
-      color: #C8D8F0;
-      text-shadow: 
-        0 0 5px rgba(200, 216, 240, 0.8),
-        0 0 10px rgba(200, 216, 240, 0.5);
-    }
-    /* Hide ::after when inline cursor is active */
-    #input.has-inline-cursor::after {
-      display: none;
-    }
-    /* Inline cursor for when clicking inside text */
-    #inline-cursor {
-      position: absolute;
-      background: #C8D8F0;
-      width: 1ch;
-      height: 1em;
-      animation: blink 1s step-end infinite;
-      pointer-events: none;
-      display: none;
-      box-shadow: 
-        0 0 8px rgba(200, 216, 240, 0.8),
-        0 0 15px rgba(200, 216, 240, 0.5);
-    }
+    /* Cursor: the native browser caret is used, shaped as a blinking block
+       (see #input caret-color / caret-shape). The old custom block cursors
+       were removed because they mispositioned while typing. */
     @keyframes blink {
       0%, 50% { opacity: 1; }
       51%, 100% { opacity: 0; }
@@ -96,12 +73,12 @@
       flex: 0 0 auto;
       height: var(--toolbar-h, 15vh);
       padding: 0.75em 1ch;
-      background: #222;
-      border-bottom: 2px solid #C8D8F0;
+      background: #E0D4BB;
+      border-bottom: 2px solid #9C8366;
       display: flex;
       flex-direction: column;
       gap: 0.75em;
-      box-shadow: 0 2px 15px rgba(200, 216, 240, 0.3);
+      box-shadow: 0 2px 15px rgba(150, 123, 96, 0.3);
       overflow-y: auto;
       overflow-x: hidden;
       box-sizing: border-box;
@@ -115,9 +92,9 @@
       width: 100%;
     }
     #toolbar button {
-      background: linear-gradient(145deg, #2a2a2a, #3a3a3a);
-      color: #C8D8F0;
-      border: 2px solid #C8D8F0;
+      background: linear-gradient(145deg, #E8DDC6, #DCCEB0);
+      color: #4F4334;
+      border: 2px solid #9C8366;
       padding: 1em 1.5em;
       font-family: inherit;
       font-size: 1.1em;
@@ -129,14 +106,14 @@
       overflow: hidden;
       text-overflow: ellipsis;
       text-shadow: 
-        0 0 5px rgba(200, 216, 240, 0.8),
-        0 0 10px rgba(200, 216, 240, 0.4);
+        0 0 5px rgba(150, 123, 96, 0.8),
+        0 0 10px rgba(150, 123, 96, 0.4);
       box-shadow: 
-        0 0 8px rgba(200, 216, 240, 0.3),
-        inset 0 0 5px rgba(200, 216, 240, 0.1);
+        0 0 8px rgba(150, 123, 96, 0.3),
+        inset 0 0 5px rgba(150, 123, 96, 0.1);
       transition: all 0.2s;
       touch-action: manipulation;
-      -webkit-tap-highlight-color: rgba(200, 216, 240, 0.3);
+      -webkit-tap-highlight-color: rgba(150, 123, 96, 0.3);
       border-radius: 3px;
     }
 
@@ -144,23 +121,23 @@
       animation: glow-pulse 2s infinite;
     }
     #toolbar button:hover {
-      background: linear-gradient(145deg, #3a3a3a, #4a4a4a);
+      background: linear-gradient(145deg, #DCCEB0, #D0BF9C);
       box-shadow: 
-        0 0 15px rgba(200, 216, 240, 0.5),
-        0 0 25px rgba(200, 216, 240, 0.3),
-        inset 0 0 8px rgba(200, 216, 240, 0.2);
+        0 0 15px rgba(150, 123, 96, 0.5),
+        0 0 25px rgba(150, 123, 96, 0.3),
+        inset 0 0 8px rgba(150, 123, 96, 0.2);
       transform: translateY(-1px);
     }
     #toolbar button:active {
-      background: linear-gradient(145deg, #4a4a4a, #5a5a5a);
+      background: linear-gradient(145deg, #D0BF9C, #C4B088);
       box-shadow: 
-        0 0 20px rgba(200, 216, 240, 0.6),
-        inset 0 0 12px rgba(200, 216, 240, 0.3);
+        0 0 20px rgba(150, 123, 96, 0.6),
+        inset 0 0 12px rgba(150, 123, 96, 0.3);
       transform: translateY(0);
     }
     #polarity-btn {
-      background: linear-gradient(145deg, #C8D8F0, #D4E3FF);
-      color: #1a1a1f;
+      background: linear-gradient(145deg, #A9B391, #B7C0A0);
+      color: #4F4334;
       font-weight: bold;
     }
 
@@ -171,11 +148,11 @@
       flex-direction: column;
       overflow: hidden;
       position: relative;
-      border: 2px solid rgba(200, 216, 240, 0.3);
+      border: 2px solid rgba(150, 123, 96, 0.3);
       border-top: none;
       box-shadow: 
-        inset 0 0 25px rgba(200, 216, 240, 0.1),
-        0 0 15px rgba(200, 216, 240, 0.15);
+        inset 0 0 25px rgba(150, 123, 96, 0.1),
+        0 0 15px rgba(150, 123, 96, 0.15);
     }
     #display {
       flex: 0 0 auto;
@@ -193,15 +170,16 @@
       flex: 1 1 auto;
       min-height: 40px;
       border: none;
-      border-top: 2px solid rgba(200, 216, 240, 0.3);
+      border-top: 2px solid rgba(150, 123, 96, 0.3);
       outline: none;
-      background: rgba(34, 34, 34, 0.5);
+      background: rgba(208, 191, 156, 0.35);
       color: inherit;
       font-family: inherit;
       font-size: 1.1em;
       line-height: 1.6;
       padding: 0.75em 1ch 4em 1ch;
-      caret-color: transparent;
+      caret-color: #4F4334;
+      caret-shape: block;
       overflow-y: auto;
       overflow-x: hidden;
       white-space: pre-wrap;
@@ -210,17 +188,13 @@
       word-break: break-word;
       box-sizing: border-box;
     }
-    #input::selection {
-      background: #C8D8F0;
-      color: #1a1a1f;
-    }
     #input .input-reverse {
-      background: #C8D8F0;
-      color: #1a1a1f;
+      background: #5A4D3E;
+      color: #EAE0CC;
       padding: 0 0.2ch;
       box-shadow: 
-        0 0 8px rgba(200, 216, 240, 0.8),
-        0 0 15px rgba(200, 216, 240, 0.5);
+        0 0 8px rgba(150, 123, 96, 0.8),
+        0 0 15px rgba(150, 123, 96, 0.5);
     }
     #measure {
       position: absolute;
@@ -229,44 +203,44 @@
       white-space: pre;
     }
     .reverse-video {
-      background: #C8D8F0;
-      color: #1a1a1f;
+      background: #5A4D3E;
+      color: #EAE0CC;
       padding: 0 0.2ch;
       font-size: 1em;
       font-weight: bold;
       box-shadow: 
-        0 0 8px rgba(200, 216, 240, 0.8),
-        0 0 15px rgba(200, 216, 240, 0.5);
+        0 0 8px rgba(150, 123, 96, 0.8),
+        0 0 15px rgba(150, 123, 96, 0.5);
     }
     .config-value {
-      color: #C8D8F0;
-      background: #222;
+      color: #4F4334;
+      background: #E0D4BB;
       padding: 0 0.5ch;
       cursor: text;
       white-space: pre-wrap;
       word-wrap: break-word;
       max-width: 80ch;
       display: inline;
-      border: 1px solid rgba(200, 216, 240, 0.3);
+      border: 1px solid rgba(150, 123, 96, 0.3);
       box-shadow: 
-        0 0 5px rgba(200, 216, 240, 0.2),
-        inset 0 0 5px rgba(200, 216, 240, 0.1);
+        0 0 5px rgba(150, 123, 96, 0.2),
+        inset 0 0 5px rgba(150, 123, 96, 0.1);
     }
     .config-value:focus {
       outline: none;
-      border-color: rgba(200, 216, 240, 0.8);
+      border-color: rgba(150, 123, 96, 0.8);
       box-shadow:
-        0 0 8px rgba(200, 216, 240, 0.3),
-        inset 0 0 5px rgba(200, 216, 240, 0.15);
+        0 0 8px rgba(150, 123, 96, 0.3),
+        inset 0 0 5px rgba(150, 123, 96, 0.15);
     }
     .config-value.placeholder {
-      color: rgba(200, 216, 240, 0.55);
+      color: rgba(150, 123, 96, 0.55);
       font-style: italic;
       font-weight: bold;
       text-shadow: none;
     }
     .default-tag {
-      color: rgba(200, 216, 240, 0.35);
+      color: rgba(150, 123, 96, 0.35);
       font-style: italic;
       text-shadow: none;
       pointer-events: none;
@@ -283,19 +257,19 @@
       background: transparent;
     }
     ::-webkit-scrollbar-thumb {
-      background: rgba(200, 216, 240, 0.4);
+      background: rgba(150, 123, 96, 0.4);
       border-radius: 2px;
     }
     ::-webkit-scrollbar-thumb:hover {
-      background: rgba(200, 216, 240, 0.8);
+      background: rgba(150, 123, 96, 0.8);
     }
     /* Drag handles */
     .drag-handle {
       flex: 0 0 22px;
       width: 100%;
-      background: rgba(200, 216, 240, 0.2);
-      border-top: 1px solid rgba(200, 216, 240, 0.5);
-      border-bottom: 1px solid rgba(200, 216, 240, 0.5);
+      background: rgba(150, 123, 96, 0.2);
+      border-top: 1px solid rgba(150, 123, 96, 0.5);
+      border-bottom: 1px solid rgba(150, 123, 96, 0.5);
       cursor: ns-resize;
       display: flex;
       align-items: center;
@@ -307,24 +281,24 @@
       position: relative;
     }
     .drag-handle:hover, .drag-handle.dragging {
-      background: rgba(200, 216, 240, 0.45);
+      background: rgba(150, 123, 96, 0.45);
       box-shadow: 
-        0 0 10px rgba(200, 216, 240, 0.5),
-        inset 0 0 6px rgba(200, 216, 240, 0.3);
+        0 0 10px rgba(150, 123, 96, 0.5),
+        inset 0 0 6px rgba(150, 123, 96, 0.3);
     }
     .drag-handle::after {
       content: '━━━━━';
-      color: rgba(200, 216, 240, 0.7);
+      color: rgba(150, 123, 96, 0.7);
       font-size: 0.75em;
       letter-spacing: 3px;
-      text-shadow: 0 0 6px rgba(200, 216, 240, 0.8);
+      text-shadow: 0 0 6px rgba(150, 123, 96, 0.8);
     }
     .message-separator {
       margin: 0.5em 0;
       font-size: 0.75em;
       letter-spacing: 3px;
-      color: rgba(200, 216, 240, 0.7);
-      text-shadow: 0 0 6px rgba(200, 216, 240, 0.5);
+      color: rgba(150, 123, 96, 0.7);
+      text-shadow: 0 0 6px rgba(150, 123, 96, 0.5);
       pointer-events: none;
       user-select: none;
     }
@@ -433,6 +407,16 @@
         this.apiKey = localStorage.getItem('apiKey') || '';
         this.preference = localStorage.getItem('preference') || '';
         this.truth = localStorage.getItem('truth') === 'true' ? true : false;
+
+        // Unified config-field definitions. All four fields behave identically:
+        // a placeholder is shown when unset, it clears on focus, and whatever is
+        // typed is saved to disk (or removed, reverting to the fallback).
+        this.configFields = {
+          'edit-preference': { prop: 'preference',    storeKey: 'preference',    placeholder: 'Make me sound like...', fallback: '',                      secret: false },
+          'edit-key':        { prop: 'apiKey',        storeKey: 'apiKey',        placeholder: 'enter your api key',    fallback: '',                      secret: true  },
+          'edit-endpoint':   { prop: 'modelEndpoint', storeKey: 'modelEndpoint', placeholder: 'https://api.openai.com', fallback: 'https://api.openai.com', secret: false },
+          'edit-model':      { prop: 'model',         storeKey: 'model',         placeholder: 'gpt-5.4-nano',          fallback: 'gpt-5.4-nano',          secret: false },
+        };
         
         this.dotCount = 0;
         this.dotInterval = null;
@@ -547,10 +531,6 @@
 
       setupEvents() {
         window.addEventListener('resize', () => this.updateDimensions());
-
-        this.input.addEventListener('input', () => {
-          this.normalizeInput();
-        });
 
         this.input.addEventListener('click', () => {
           this.updateInlineCursor();
@@ -687,8 +667,8 @@
 
         document.getElementById('back-btn').addEventListener('click', () => {
           const backBtn = document.getElementById('back-btn');
-          backBtn.style.background = '#C8D8F0';
-          backBtn.style.color = '#1a1a1f';
+          backBtn.style.background = '#5A4D3E';
+          backBtn.style.color = '#EAE0CC';
           setTimeout(() => {
             backBtn.style.background = '';
             backBtn.style.color = '';
@@ -784,8 +764,8 @@
           const content = this.input.textContent.trim();
           if (content) {
             this.input.innerHTML = '';
-            btn.style.background = '#C8D8F0';
-            btn.style.color = '#1a1a1f';
+            btn.style.background = '#5A4D3E';
+            btn.style.color = '#EAE0CC';
             setTimeout(() => {
               btn.style.background = '';
               btn.style.color = '';
@@ -869,88 +849,64 @@
           }
         });
 
+        // Unified handling for every config field (preference, key, endpoint,
+        // model): clear the placeholder on focus, persist on input, restore the
+        // placeholder / re-mask on blur. Driven by this.configFields.
+        const caretToEnd = (el) => {
+          const range = document.createRange();
+          range.selectNodeContents(el);
+          range.collapse(false);
+          const sel = window.getSelection();
+          sel.removeAllRanges();
+          sel.addRange(range);
+        };
+
+        const commitField = (f, el) => {
+          let val = el.textContent.trim();
+          if (val === f.placeholder) val = '';
+          if (val === '' || val === 'NULL') {
+            this[f.prop] = f.fallback;
+            localStorage.removeItem(f.storeKey);
+          } else {
+            this[f.prop] = val;
+            localStorage.setItem(f.storeKey, val);
+            if (f.secret) el.setAttribute('data-actual-key', val);
+          }
+        };
+
         this.display.addEventListener('focus', (e) => {
-          if (e.target.id === 'edit-key') {
+          const f = this.configFields[e.target.id];
+          if (!f) return;
+          if (f.secret) {
             this.keyFieldBeingEdited = true;
-            const keyText = e.target.textContent.trim();
             const actualKey = e.target.getAttribute('data-actual-key');
-            if (keyText.match(/^•+$/) && actualKey) {
+            if (e.target.textContent.trim().match(/^•+$/) && actualKey) {
               e.target.textContent = actualKey;
             }
-            const range = document.createRange();
-            range.selectNodeContents(e.target);
-            range.collapse(false);
-            const sel = window.getSelection();
-            sel.removeAllRanges();
-            sel.addRange(range);
-
-          } else if (e.target.id === 'edit-preference') {
-            const val = e.target.textContent.trim();
-            if (val === 'Make me sound like...') {
-              e.target.textContent = '';
-            }
-            const range = document.createRange();
-            range.selectNodeContents(e.target);
-            range.collapse(false);
-            const sel = window.getSelection();
-            sel.removeAllRanges();
-            sel.addRange(range);
           }
+          if (e.target.classList.contains('placeholder')) {
+            e.target.classList.remove('placeholder');
+            e.target.textContent = '';
+          }
+          caretToEnd(e.target);
         }, true);
 
         this.display.addEventListener('input', (e) => {
-          if (e.target.id === 'edit-preference') {
-            const val = e.target.textContent.trim();
-            if (val && val !== 'NULL' && val !== 'Make me sound like...') {
-              this.preference = val;
-              localStorage.setItem('preference', val);
-            }
-          }
+          const f = this.configFields[e.target.id];
+          if (!f) return;
+          commitField(f, e.target);
         }, true);
 
         this.display.addEventListener('blur', (e) => {
-          if (e.target.id === 'edit-preference') {
-            const val = e.target.textContent.trim();
-            if (val === '' || val === 'NULL' || val === 'Make me sound like...') {
-              this.preference = '';
-              localStorage.removeItem('preference');
-            } else {
-              this.preference = val;
-              localStorage.setItem('preference', val);
-            }
-          }
-          if (e.target.id === 'edit-endpoint') {
-            const val = e.target.textContent.trim();
-            const isDefault = (val === '' || val === 'https://api.openai.com');
-            // Update or insert the sibling default tag
-            let tagEl = e.target.nextElementSibling;
-            if (tagEl && tagEl.classList.contains('default-tag')) tagEl.remove();
-            if (isDefault) {
-              const tag = document.createElement('span');
-              tag.className = 'default-tag';
-              tag.textContent = '[default]';
-              e.target.insertAdjacentElement('afterend', tag);
-            }
-          }
-          if (e.target.id === 'edit-model') {
-            const val = e.target.textContent.trim();
-            const isDefault = (val === '' || val === 'gpt-5.4-nano');
-            let tagEl = e.target.nextElementSibling;
-            if (tagEl && tagEl.classList.contains('default-tag')) tagEl.remove();
-            if (isDefault) {
-              const tag = document.createElement('span');
-              tag.className = 'default-tag';
-              tag.textContent = '[default]';
-              e.target.insertAdjacentElement('afterend', tag);
-            }
-          }
-          if (e.target.id === 'edit-key') {
-            this.keyFieldBeingEdited = false;
-            const saved = this.input.innerHTML;
-            this.render();
-            this.input.innerHTML = saved;
-          }
-
+          const f = this.configFields[e.target.id];
+          if (!f) return;
+          if (f.secret) this.keyFieldBeingEdited = false;
+          commitField(f, e.target);
+          // Re-render so the placeholder, key masking and default/required tags
+          // are restored consistently. Preserve any text being composed.
+          const savedInput = this.input.textContent;
+          this.render();
+          this.input.textContent = savedInput;
         }, true);
       }
 
@@ -961,44 +917,16 @@
       }
 
       normalizeInput() {
+        // Place the caret at the end of the input. No reverse-video span
+        // wrapping and no innerHTML rewrite, so the browser's native undo,
+        // select-all, cut and selection highlight all keep working.
+        if (!this.input.textContent) return;
         const selection = window.getSelection();
-        let cursorOffset = 0;
-
-        if (selection.rangeCount > 0) {
-          const range = selection.getRangeAt(0);
-          const preCaretRange = range.cloneRange();
-          preCaretRange.selectNodeContents(this.input);
-          preCaretRange.setEnd(range.endContainer, range.endOffset);
-          cursorOffset = preCaretRange.toString().length;
-        }
-
-        const textContent = this.input.textContent;
-
-        this.input.innerHTML = '';
-        if (textContent) {
-          const span = document.createElement('span');
-          span.className = 'input-reverse';
-          span.textContent = textContent;
-          this.input.appendChild(span);
-
-          try {
-            const range = document.createRange();
-            const textNode = span.firstChild;
-            if (textNode) {
-              const offset = Math.min(cursorOffset, textNode.length);
-              range.setStart(textNode, offset);
-              range.collapse(true);
-              selection.removeAllRanges();
-              selection.addRange(range);
-            }
-          } catch (e) {
-            const range = document.createRange();
-            range.selectNodeContents(this.input);
-            range.collapse(false);
-            selection.removeAllRanges();
-            selection.addRange(range);
-          }
-        }
+        const range = document.createRange();
+        range.selectNodeContents(this.input);
+        range.collapse(false);
+        selection.removeAllRanges();
+        selection.addRange(range);
       }
 
       updateDimensions() {
@@ -1044,44 +972,11 @@
       }
 
       updateInlineCursor() {
-        const sel = window.getSelection();
-        if (!sel.rangeCount || document.activeElement !== this.input) {
-          this.inlineCursor.style.display = 'none';
-          this.input.classList.remove('has-inline-cursor');
-          return;
-        }
-
-        const range = sel.getRangeAt(0);
-        if (!range.collapsed) {
-          this.inlineCursor.style.display = 'none';
-          this.input.classList.remove('has-inline-cursor');
-          return;
-        }
-
-        const preCaretRange = range.cloneRange();
-        preCaretRange.selectNodeContents(this.input);
-        preCaretRange.setEnd(range.endContainer, range.endOffset);
-        const caretOffset = preCaretRange.toString().length;
-        const totalLength = this.input.textContent.length;
-        
-        if (caretOffset === totalLength) {
-          this.inlineCursor.style.display = 'none';
-          this.input.classList.remove('has-inline-cursor');
-          return;
-        }
-
-        const rect = range.getBoundingClientRect();
-        const containerRect = document.getElementById('display-container').getBoundingClientRect();
-        
-        const computedStyle = getComputedStyle(this.input);
-        const fontSize = parseFloat(computedStyle.fontSize);
-        const lineHeight = parseFloat(computedStyle.lineHeight);
-        const adjustment = (lineHeight - fontSize) / 4;
-        
-        this.inlineCursor.style.display = 'block';
-        this.input.classList.add('has-inline-cursor');
-        this.inlineCursor.style.left = `${rect.left - containerRect.left}px`;
-        this.inlineCursor.style.top = `${rect.top - containerRect.top + adjustment}px`;
+        // No-op: the input now uses the native browser caret, which positions
+        // itself correctly in every case. The old floating cursor is kept
+        // hidden.
+        if (this.inlineCursor) this.inlineCursor.style.display = 'none';
+        if (this.input) this.input.classList.remove('has-inline-cursor');
       }
 
       formatStructures() {
@@ -1258,84 +1153,33 @@
       }
 
       render() {
-        const endpointEl = document.getElementById('edit-endpoint');
-        const modelEl = document.getElementById('edit-model');
-
-        const keyEl = document.getElementById('edit-key');
-        const preferenceEl = document.getElementById('edit-preference');
-        
-        let currentEndpoint = this.modelEndpoint;
-        let currentModel = this.model;
-        let currentKeyDisplay = '';
-        let currentPreference = this.preference;
-        
-        if (endpointEl) {
-          const endpointText = endpointEl.textContent.trim();
-          if (endpointText === '' || endpointText === 'NULL') {
-            this.modelEndpoint = 'https://api.openai.com';
-            localStorage.removeItem('modelEndpoint');
-            currentEndpoint = this.modelEndpoint;
-          } else {
-            currentEndpoint = endpointText;
-            this.modelEndpoint = currentEndpoint;
-            localStorage.setItem('modelEndpoint', this.modelEndpoint);
-          }
-        }
-        if (modelEl) {
-          const modelText = modelEl.textContent.trim();
-          if (modelText === '' || modelText === 'NULL') {
-            this.model = 'gpt-5.4-nano';
-            localStorage.removeItem('model');
-            currentModel = this.model;
-          } else {
-            currentModel = modelText;
-            this.model = currentModel;
-            localStorage.setItem('model', this.model);
-          }
-        }
-        
-        if (keyEl && !this.keyFieldBeingEdited) {
-          const keyText = keyEl.textContent.trim();
-          if (keyText === '' || keyText === 'enter your api key') {
-            this.apiKey = '';
-            localStorage.removeItem('apiKey');
-          } else if (!keyText.match(/^•+$/) && keyText !== 'NULL') {
-            this.apiKey = keyText;
-            localStorage.setItem('apiKey', this.apiKey);
-          }
-          currentKeyDisplay = (this.apiKey && this.apiKey !== 'NULL' && this.apiKey !== '') ? '•'.repeat(this.apiKey.length) : '';
-        } else if (keyEl) {
-          currentKeyDisplay = keyEl.textContent;
-        } else {
-          currentKeyDisplay = (this.apiKey && this.apiKey !== 'NULL' && this.apiKey !== '') ? '•'.repeat(this.apiKey.length) : '';
-        }
-        
-        if (preferenceEl) {
-          const prefText = preferenceEl.textContent.trim();
-          if (prefText !== 'NULL' && prefText !== '' && prefText !== 'Make me sound like...') {
-            currentPreference = prefText;
-            this.preference = currentPreference;
-            localStorage.setItem('preference', this.preference);
-          }
-        }
-
         let output = '';
         const structures = this.formatStructures();
         let blockInput = false;
 
-        const keyPlaceholder = (!this.apiKey || this.apiKey === 'NULL' || this.apiKey === '') ? ' placeholder' : '';
-        const keyDisplay = keyPlaceholder ? 'enter your api key' : currentKeyDisplay;
-        const keyRequiredTag = keyPlaceholder ? '<span class="default-tag">[required]</span>' : '';
-        const endpointIsDefault = (!currentEndpoint || currentEndpoint === 'https://api.openai.com');
-        const modelIsDefault = (!currentModel || currentModel === 'gpt-5.4-nano');
-        const endpointDefaultTag = endpointIsDefault ? '<span class="default-tag">[default]</span>' : '';
-        const modelDefaultTag = modelIsDefault ? '<span class="default-tag">[default]</span>' : '';
-        const voiceDisplay = this.preference || 'Make me sound like...';
-        const voicePlaceholder = !this.preference ? ' placeholder' : '';
-        output += '<span class="reverse-video">bias:</span> <span id="edit-preference" class="config-value' + voicePlaceholder + '" contenteditable="true">' + voiceDisplay + '</span>\n';
-                output += '<span class="reverse-video">api key:</span> <span id="edit-key" class="config-value' + keyPlaceholder + '" contenteditable="true" data-actual-key="' + (this.apiKey || '') + '">' + keyDisplay + '</span>' + keyRequiredTag + '\n';
-        output += '<span class="reverse-video">endpoint:</span> <span id="edit-endpoint" class="config-value" contenteditable="true">' + (currentEndpoint || 'https://api.openai.com') + '</span>' + endpointDefaultTag + '\n';
-        output += '<span class="reverse-video">model:</span> <span id="edit-model" class="config-value" contenteditable="true">' + (currentModel || 'gpt-5.4-nano') + '</span>' + modelDefaultTag + '\n';
+        // Build all four config fields uniformly. A field is "unset" when its
+        // value equals its fallback (or is empty); unset fields show their
+        // placeholder in placeholder style. Persistence happens live in the
+        // field handlers, so render only reflects current state.
+        const fieldRow = (id, label, tagWhenUnset) => {
+          const f = this.configFields[id];
+          const value = this[f.prop];
+          const unset = !value || value === f.fallback;
+          const cls = 'config-value' + (unset ? ' placeholder' : '');
+          let shown;
+          if (unset)         shown = f.placeholder;
+          else if (f.secret) shown = '•'.repeat(value.length);
+          else               shown = value;
+          const extra = f.secret ? ' data-actual-key="' + (value || '') + '"' : '';
+          const tag = (unset && tagWhenUnset) ? '<span class="default-tag">' + tagWhenUnset + '</span>' : '';
+          return '<span class="reverse-video">' + label + '</span> <span id="' + id +
+                 '" class="' + cls + '" contenteditable="true"' + extra + '>' + shown + '</span>' + tag + '\n';
+        };
+
+        output += fieldRow('edit-preference', 'bias:', '');
+        output += fieldRow('edit-key', 'api key:', '[required]');
+        output += fieldRow('edit-endpoint', 'endpoint:', '[default]');
+        output += fieldRow('edit-model', 'model:', '[default]');
         output += '<div class="message-separator"></div>';
 
         switch(this.state) {
@@ -1374,23 +1218,10 @@
 
         this.display.innerHTML = output;
 
-
-        
-        if (!this.keyFieldBeingEdited) {
-          const keyElAfterRender = document.getElementById('edit-key');
-          if (keyElAfterRender && this.apiKey && this.apiKey !== 'NULL' && this.apiKey !== '') {
-            keyElAfterRender.textContent = '•'.repeat(this.apiKey.length);
-          }
-        }
-        
         this.input.contentEditable = !blockInput;
         if (!blockInput) {
           if (this.state === State.PROBE_RECOVER_EDIT && this.lastInitiation) {
-            const span = document.createElement('span');
-            span.className = 'input-reverse';
-            span.textContent = this.lastInitiation;
-            this.input.innerHTML = '';
-            this.input.appendChild(span);
+            this.input.textContent = this.lastInitiation;
           } else {
             this.input.textContent = '';
           }
@@ -1464,7 +1295,7 @@
               this.scrollToBottom();
               const dc = document.getElementById('display-container');
               if (dc) {
-                dc.style.borderColor = 'rgba(200, 216, 240, 0.9)';
+                dc.style.borderColor = 'rgba(150, 123, 96, 0.9)';
                 setTimeout(() => { dc.style.borderColor = ''; }, 150);
               }
               this.startWait();
@@ -1516,7 +1347,7 @@
               this.scrollToBottom();
               const dc = document.getElementById('display-container');
               if (dc) {
-                dc.style.borderColor = 'rgba(200, 216, 240, 0.9)';
+                dc.style.borderColor = 'rgba(150, 123, 96, 0.9)';
                 setTimeout(() => { dc.style.borderColor = ''; }, 150);
               }
               this.startWait();
