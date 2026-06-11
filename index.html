@@ -1132,7 +1132,7 @@
           // Typewriter reveal. Network chunks (token bursts) fill a queue; a
           // timer drains it one character per tick, so the response appears
           // letter-by-letter at a steady cadence no matter how the bytes arrive.
-          const TYPE_MS = 8;    // ms per character
+          const TYPE_MS = 2;    // ms per character
           let queue = '';
           let streamDone = false;
           let hasAddedHeader = false;
